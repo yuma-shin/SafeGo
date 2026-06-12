@@ -3,9 +3,9 @@ import { fetchJMACurrentWeather } from "@/lib/weather";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const officeCode = request.nextUrl.searchParams.get("officeCode")?.trim();
-  if (!officeCode) {
+  if (!officeCode || !/^\d{6}$/.test(officeCode)) {
     return NextResponse.json(
-      { error: "officeCode パラメータが必要です" },
+      { error: "Invalid parameters", code: "INVALID_PARAMS" },
       { status: 400 },
     );
   }

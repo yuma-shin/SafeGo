@@ -51,6 +51,9 @@ export class JMAFetchError extends Error {
 export async function fetchJMAWarning(
   officeCode: string
 ): Promise<JMAWarningData> {
+  if (!/^\d{6}$/.test(officeCode)) {
+    throw new JMAFetchError(`Invalid officeCode: ${officeCode}`);
+  }
   const url = `https://www.jma.go.jp/bosai/warning/data/r8/${officeCode}.json`;
 
   let response: Response;

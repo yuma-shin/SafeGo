@@ -78,6 +78,7 @@ function getAmedasTimeCode(minutesBack = 20): { fileCode: string; obsKey: string
 export async function fetchJMACurrentWeather(
   officeCode: string
 ): Promise<CurrentWeather | null> {
+  if (!/^\d{6}$/.test(officeCode)) return null;
   const forecastCode = FORECAST_CODE_MAP[officeCode] ?? officeCode;
   const forecastUrl = `https://www.jma.go.jp/bosai/forecast/data/forecast/${forecastCode}.json`;
 
@@ -116,7 +117,7 @@ export async function fetchJMACurrentWeather(
     // AMeDAS現在気温取得（サーバー時刻から計算）
     let temp: number | null = null;
     const stationCode = stationArea?.area.code;
-    if (stationCode) {
+    if (stationCode && /^\d{4,6}$/.test(stationCode)) {
       const { fileCode, obsKey } = getAmedasTimeCode(20);
       const amedasRes = await fetch(
         `https://www.jma.go.jp/bosai/amedas/data/point/${stationCode}/${fileCode}.json`,

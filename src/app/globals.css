@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Custom Properties ─────────────────────── */
+:root {
+  /* light mode defaults */
+  --body-bg: #f0f4f8;
+  --card-bg: rgba(255, 255, 255, 0.82);
+  --card-bg-muted: rgba(255, 255, 255, 0.70);
+  --card-error-bg: rgba(239, 68, 68, 0.06);
+  --card-border: rgba(0, 0, 0, 0.08);
+  --input-bg: rgba(255, 255, 255, 0.90);
+  --input-border: rgba(0, 0, 0, 0.12);
+  --dropdown-bg: rgba(248, 250, 252, 0.98);
+  --dropdown-border: rgba(0, 0, 0, 0.09);
+  --footer-border: rgba(0, 0, 0, 0.07);
+  --skeleton-line: rgba(0, 0, 0, 0.07);
+  --dot-grid: rgba(0, 0, 0, 0.04);
+  --banner-default-bg: rgba(0, 0, 0, 0.04);
+  --banner-green-bg: rgba(16, 185, 129, 0.08);
+  --banner-green-border: rgba(16, 185, 129, 0.22);
+  --banner-orange-bg: rgba(234, 88, 12, 0.08);
+  --banner-orange-border: rgba(249, 115, 22, 0.22);
+  --banner-red-bg: rgba(220, 38, 38, 0.08);
+  --banner-red-border: rgba(239, 68, 68, 0.22);
+  --silhouette-fill: rgba(51, 65, 85, 0.07);
+  --silhouette-stroke: transparent;
+}
+
+.dark {
+  --body-bg: #020617;
+  --card-bg: rgba(255, 255, 255, 0.07);
+  --card-bg-muted: rgba(255, 255, 255, 0.06);
+  --card-error-bg: rgba(239, 68, 68, 0.08);
+  --card-border: rgba(255, 255, 255, 0.12);
+  --input-bg: rgba(255, 255, 255, 0.08);
+  --input-border: rgba(255, 255, 255, 0.14);
+  --dropdown-bg: rgba(15, 23, 42, 0.95);
+  --dropdown-border: rgba(255, 255, 255, 0.12);
+  --footer-border: rgba(255, 255, 255, 0.06);
+  --skeleton-line: rgba(255, 255, 255, 0.10);
+  --dot-grid: rgba(255, 255, 255, 0.04);
+  --banner-default-bg: rgba(255, 255, 255, 0.06);
+  --banner-green-bg: rgba(16, 185, 129, 0.12);
+  --banner-green-border: rgba(52, 211, 153, 0.30);
+  --banner-orange-bg: rgba(234, 88, 12, 0.15);
+  --banner-orange-border: rgba(249, 115, 22, 0.35);
+  --banner-red-bg: rgba(220, 38, 38, 0.15);
+  --banner-red-border: rgba(239, 68, 68, 0.35);
+  --silhouette-fill: rgba(255, 255, 255, 0.08);
+  --silhouette-stroke: rgba(255, 255, 255, 0.14);
+}
+
+body {
+  background: var(--body-bg);
+}
+
+/* Glass card utility */
+.glass {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+}

@@ -6,6 +6,8 @@ import WeatherCard from "@/components/WeatherCard";
 import JudgmentBanner from "@/components/JudgmentBanner";
 import Footer from "@/components/Footer";
 import ThemeToggle from "@/components/ThemeToggle";
+import PushNotificationButton from "@/components/PushNotificationButton";
+import InstallPrompt from "@/components/InstallPrompt";
 import { useTheme } from "@/hooks/useTheme";
 import { makeJudgment } from "@/lib/judgment";
 import type {
@@ -282,6 +284,9 @@ export default function Home() {
             weather={state.officeWeather}
           />
         </div>
+
+        <PushNotificationButton home={state.home} office={state.office} />
+        <InstallPrompt />
       </main>
 
       <Footer />

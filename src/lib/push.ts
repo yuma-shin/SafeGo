@@ -2,12 +2,6 @@ import webPush from "web-push";
 import type { AlertLevel, JudgmentResult } from "@/types/jma";
 import type { StoredSubscription, NotificationPayload } from "@/types/push";
 
-webPush.setVapidDetails(
-  "mailto:tomatokun0522@gmail.com",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "",
-  process.env.VAPID_PRIVATE_KEY ?? ""
-);
-
 const JUDGMENT_TITLES: Record<JudgmentResult, string> = {
   "stay-home": "自宅待機",
   "telework": "テレワーク推奨",
@@ -61,6 +55,12 @@ export async function sendNotification(
   sub: StoredSubscription,
   payload: NotificationPayload
 ): Promise<PushSendResult> {
+  webPush.setVapidDetails(
+    process.env.VAPID_SUBJECT ?? "mailto:admin@example.com",
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "",
+    process.env.VAPID_PRIVATE_KEY ?? ""
+  );
+
   try {
     await webPush.sendNotification(
       {

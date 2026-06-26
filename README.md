@@ -6,17 +6,18 @@
 
 ## 主な機能
 
-| 機能                | 説明                                                                        |
-| ------------------- | --------------------------------------------------------------------------- |
-| 地域設定            | 自宅・勤務地を市区町村単位でオートコンプリート入力                          |
-| 警報取得            | 気象庁 bosai/warning API から最新の警報・注意報を取得                       |
-| 出社判定            | 特別警報・警報 → 「自宅待機」、注意報 → 「要注意」、なし → 「通常出社可能」 |
-| 現在気温・天気      | AMeDAS観測値による現在気温と天気予報（概況・最高最低気温）を表示            |
-| 都道府県シルエット  | カード背景に都道府県の地形シルエットをアスペクト比正確に表示                |
-| キャッシュ制御      | APIへの過剰リクエストを防ぐ2層キャッシュ（最大10分に1回）                   |
-| 設定の永続化        | localStorage により地域設定・テーマをリロード後も保持                       |
-| ライト/ダークモード | OSの設定に連動し、手動切り替えも可能                                        |
-| レスポンシブ        | スマートフォン（320px〜）・タブレット・デスクトップに対応                   |
+| 機能                | 説明                                                                            |
+| ------------------- | ------------------------------------------------------------------------------- |
+| 地域設定            | 自宅・勤務地を市区町村単位でオートコンプリート入力                              |
+| 警報取得            | 気象庁 bosai/warning API から最新の警報・注意報を取得                           |
+| 出社判定            | 特別警報・警報 → 「自宅待機」、注意報 → 「テレワーク推奨」、なし → 「出社可能」 |
+| 現在気温・天気      | AMeDAS観測値による現在気温と天気予報（概況・最高最低気温）を表示                |
+| 都道府県シルエット  | カード背景に都道府県の地形シルエットをアスペクト比正確に表示                    |
+| プッシュ通知        | 気象状況が変化したとき（10分ごと）にブラウザ通知を送信（PWA対応）               |
+| キャッシュ制御      | APIへの過剰リクエストを防ぐ2層キャッシュ（最大10分に1回）                       |
+| 設定の永続化        | localStorage により地域設定・テーマをリロード後も保持                           |
+| ライト/ダークモード | OSの設定に連動し、手動切り替えも可能                                            |
+| レスポンシブ        | スマートフォン（320px〜）・タブレット・デスクトップに対応                       |
 
 ---
 
@@ -24,8 +25,8 @@
 
 ```
 自宅または勤務地に 特別警報 or 警報 → 自宅待機を推奨
-自宅または勤務地に 注意報のみ         → 注意が必要・状況を確認
-どちらにも警報・注意報なし             → 通常出社可能
+自宅または勤務地に 注意報のみ         → テレワーク推奨
+どちらにも警報・注意報なし             → 出社可能
 ```
 
 ---
@@ -34,10 +35,12 @@
 
 | レイヤー       | 技術                                       |
 | -------------- | ------------------------------------------ |
-| フレームワーク | Next.js 15 (App Router) + React 19         |
+| フレームワーク | Next.js 16 (App Router) + React 19         |
 | 言語           | TypeScript 5 (strict モード)               |
 | スタイル       | Tailwind CSS v3 (darkMode: "class")        |
 | 外部 API       | 気象庁 bosai API（警報・天気予報・AMeDAS） |
+| プッシュ通知   | Web Push API + VAPID（web-push）           |
+| データストア   | Redis（ioredis 経由、Vercel KV 推奨）      |
 | テスト         | Jest 29 + React Testing Library            |
 | ホスティング   | Vercel（推奨）                             |
 
@@ -61,6 +64,29 @@ npm run dev
 ```
 
 ブラウザで [http://localhost:3000](http://localhost:3000) を開いてください。
+
+### 環境変数
+
+`.env.local.example` をコピーして `.env.local` を作成し、各値を設定してください。
+
+```bash
+cp .env.local.example .env.local
+```
+
+| 変数名                         | 説明                                                     |
+| ------------------------------ | -------------------------------------------------------- |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | VAPID 公開鍵（下記コマンドで生成）                       |
+| `VAPID_PRIVATE_KEY`            | VAPID 秘密鍵                                             |
+| `VAPID_SUBJECT`                | Push サービス連絡先（`mailto:you@example.com` 形式）     |
+| `REDIS_URL`                    | Redis 接続 URL（Vercel KV ダッシュボードからコピー）     |
+| `CRON_SECRET`                  | Cron 認証トークン（任意の強力なランダム文字列）          |
+| `VERCEL_APP_URL`               | デプロイ先 URL（GitHub Actions から通知 API を呼ぶため） |
+
+**VAPID 鍵の生成:**
+
+```bash
+npx web-push generate-vapid-keys
+```
 
 ### テスト実行
 
@@ -88,31 +114,52 @@ src/
 ├── app/
 │   ├── layout.tsx               # ルートレイアウト（ダークモードフラッシュ防止）
 │   ├── page.tsx                 # メインページ（状態管理・UI統合）
+│   ├── manifest.ts              # PWA マニフェスト
 │   ├── globals.css              # CSS カスタムプロパティ（ライト/ダーク両テーマ）
 │   └── api/
-│       ├── weather/
-│       │   └── route.ts         # 警報・注意報 API プロキシ
-│       └── current-weather/
-│           └── route.ts         # 現在気温・天気 API プロキシ
+│       ├── weather/route.ts     # 警報・注意報 API プロキシ
+│       ├── current-weather/
+│       │   └── route.ts         # 現在気温・天気 API プロキシ
+│       ├── push/
+│       │   ├── subscribe/route.ts    # Push 購読登録
+│       │   └── unsubscribe/route.ts  # Push 購読解除
+│       └── cron/
+│           └── notify/route.ts  # Cron 通知送信（GitHub Actions から呼び出し）
 ├── components/
 │   ├── LocationInput.tsx        # 地域名入力 + オートコンプリート
 │   ├── WeatherCard.tsx          # 1拠点の警報状況カード（シルエット背景付き）
 │   ├── JudgmentBanner.tsx       # 出社可否バナー
 │   ├── PrefectureSilhouette.tsx # 都道府県SVGシルエット
 │   ├── ThemeToggle.tsx          # ライト/ダーク切り替えボタン
+│   ├── PushNotificationButton.tsx # プッシュ通知 ON/OFF ボタン
+│   ├── InstallPrompt.tsx        # iOS ホーム画面追加ガイド
 │   └── Footer.tsx               # 免責事項フッター
 ├── hooks/
-│   └── useTheme.ts              # テーマ状態管理フック
+│   ├── useTheme.ts              # テーマ状態管理フック
+│   └── usePushNotification.ts  # プッシュ通知状態管理フック
 ├── lib/
 │   ├── jma.ts                   # 気象庁警報 API クライアント
 │   ├── weather.ts               # 天気予報・AMeDAS 取得
 │   ├── judgment.ts              # 警報レベル分類・出社可否判定
-│   └── areas.ts                 # 地域検索ユーティリティ
+│   ├── areas.ts                 # 地域検索ユーティリティ
+│   ├── kv.ts                    # Redis CRUD（購読情報管理）
+│   └── push.ts                  # VAPID 設定・通知ペイロード生成・送信
 ├── types/
-│   └── jma.ts                   # 全ドメイン型定義
+│   ├── jma.ts                   # 気象ドメイン型定義
+│   └── push.ts                  # プッシュ通知ドメイン型定義
 └── data/
     ├── areas.json               # 全国市区町村マスタ
     └── prefecture-paths.ts      # 都道府県SVGパス（アスペクト比補正済み）
+
+public/
+├── sw.js                        # Service Worker（Push イベント受信）
+└── icons/
+    ├── icon-192.svg
+    └── icon-512.svg
+
+.github/
+└── workflows/
+    └── push-notify.yml          # 10分ごとに通知 Cron を呼び出す GitHub Actions
 ```
 
 ---
@@ -138,7 +185,7 @@ API ルートのレスポンスに `Cache-Control` ヘッダーを付与し、Ve
 | API ルート             | ヘッダー                                  | 動作                  |
 | ---------------------- | ----------------------------------------- | --------------------- |
 | `/api/weather`         | `s-maxage=600, stale-while-revalidate=60` | 10分間 CDN キャッシュ |
-| `/api/current-weather` | `s-maxage=600, stale-while-revalidate=60` | 10時間 CDN キャッシュ |
+| `/api/current-weather` | `s-maxage=600, stale-while-revalidate=60` | 10分間 CDN キャッシュ |
 
 > **結果**: 警報・注意報データは **最大10分に1回** 気象庁APIにリクエストが発生します。複数ユーザーが同時アクセスしても、CDNキャッシュが有効な間は気象庁APIへの追加リクエストは発生しません。
 
@@ -190,13 +237,67 @@ API ルートのレスポンスに `Cache-Control` ヘッダーを付与し、Ve
 }
 ```
 
+### `POST /api/push/subscribe`
+
+プッシュ通知の購読を登録します。自宅・勤務地のいずれか一方のみの設定でも登録できます。
+
+**リクエストボディ**:
+
+```json
+{
+  "subscription": {
+    "endpoint": "https://fcm.googleapis.com/fcm/send/...",
+    "keys": { "p256dh": "...", "auth": "..." }
+  },
+  "homeOfficeCode": "130000",
+  "homeCityCode": "1310100",
+  "officeOfficeCode": null,
+  "officeCityCode": null
+}
+```
+
+### `DELETE /api/push/unsubscribe`
+
+購読を解除します。
+
+**リクエストボディ**: `{ "endpoint": "https://..." }`
+
+### `POST /api/cron/notify`
+
+登録済みの購読者全員に出社判定を通知します。GitHub Actions から10分ごとに呼び出されます。
+
+**認証**: `Authorization: Bearer {CRON_SECRET}` ヘッダーが必要です。
+
+**レスポンス例**:
+
+```json
+{ "processed": 42, "notified": 5, "errors": 0 }
+```
+
 **共通エラーレスポンス**:
 
 | HTTP ステータス | code              | 説明                     |
 | --------------- | ----------------- | ------------------------ |
 | 400             | `INVALID_PARAMS`  | パラメータ欠落・形式不正 |
+| 401             | —                 | 認証失敗                 |
 | 502             | `JMA_UNAVAILABLE` | 気象庁 API 障害          |
 | 500             | `PARSE_ERROR`     | レスポンスパースエラー   |
+
+---
+
+## プッシュ通知の仕組み
+
+```
+GitHub Actions (*/10 * * * *)
+  └→ POST /api/cron/notify
+       ├→ Redis から全購読者を取得
+       ├→ 気象庁 API から警報情報を取得（officeCode 単位でキャッシュ）
+       ├→ 出社判定を実行
+       ├→ 前回と判定が変わった購読者にのみ Push 通知を送信
+       └→ HTTP 410 の宛先は自動削除・30日未通知の購読は自動削除
+```
+
+iOS Safari でプッシュ通知を受け取るには、ホーム画面に追加（PWA インストール）が必要です。アプリ内にインストール手順のガイドが表示されます。
 
 ---
 
@@ -216,7 +317,18 @@ API ルートのレスポンスに `Cache-Control` ヘッダーを付与し、Ve
 
 1. GitHub にリポジトリをプッシュ
 2. [Vercel](https://vercel.com) でプロジェクトをインポート
-3. **環境変数は不要** — そのままデプロイできます
+3. Vercel KV（Redis）をプロジェクトに追加
+4. 以下の環境変数を Vercel ダッシュボードで設定:
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+   - `VAPID_PRIVATE_KEY`
+   - `VAPID_SUBJECT`
+   - `REDIS_URL`（Vercel KV ダッシュボードからコピー）
+   - `CRON_SECRET`
+5. GitHub リポジトリの Secrets に以下を追加:
+   - `CRON_SECRET`（Vercel と同じ値）
+   - `VERCEL_APP_URL`（例: `https://safego.vercel.app`）
+
+> **プッシュ通知なしで使う場合**: 環境変数を設定しなければ、プッシュ通知ボタンは非表示になります。通知以外の全機能は環境変数なしで動作します。
 
 ---
 

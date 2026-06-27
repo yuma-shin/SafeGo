@@ -107,12 +107,23 @@ export default function PushNotificationButton({ home, office }: Props) {
           </div>
         )}
 
-        {/* 地域変更または未登録（ゾンビ）状態の案内 */}
+        {/* 地域変更の案内テキスト */}
         {!state.isLoading && locationChanged && hasCurrentLocation && (
-          <>
-            <p className="text-xs text-amber-500 dark:text-amber-400">
-              地域設定が変更されています
-            </p>
+          <p className="text-xs text-amber-500 dark:text-amber-400">
+            地域設定が変更されています
+          </p>
+        )}
+
+        {/* 登録なし・現在地もなし（完全ゾンビ） */}
+        {!state.isLoading && !hasRegistered && !hasCurrentLocation && (
+          <p className="text-xs text-amber-500 dark:text-amber-400">
+            地域を設定してから通知地域を更新してください
+          </p>
+        )}
+
+        {/* ボタン行 */}
+        <div className="flex flex-row gap-2 items-center justify-center">
+          {!state.isLoading && locationChanged && hasCurrentLocation && (
             <button
               type="button"
               onClick={() => void subscribe()}
@@ -125,28 +136,20 @@ export default function PushNotificationButton({ home, office }: Props) {
             >
               通知地域を更新する
             </button>
-          </>
-        )}
-
-        {/* 登録なし・現在地もなし（完全ゾンビ） */}
-        {!state.isLoading && !hasRegistered && !hasCurrentLocation && (
-          <p className="text-xs text-amber-500 dark:text-amber-400">
-            地域を設定してから通知地域を更新してください
-          </p>
-        )}
-
-        <button
-          type="button"
-          onClick={() => void unsubscribe()}
-          disabled={state.isLoading}
-          className="text-xs px-3 py-1 rounded-full transition-colors
-            bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20
-            text-slate-500 hover:text-slate-700 dark:text-white/50 dark:hover:text-white/80
-            border border-slate-200 dark:border-white/[0.12]
-            disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          通知を解除する
-        </button>
+          )}
+          <button
+            type="button"
+            onClick={() => void unsubscribe()}
+            disabled={state.isLoading}
+            className="text-xs px-3 py-1 rounded-full transition-colors
+              bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20
+              text-slate-500 hover:text-slate-700 dark:text-white/50 dark:hover:text-white/80
+              border border-slate-200 dark:border-white/[0.12]
+              disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            通知を解除する
+          </button>
+        </div>
         {state.errorMessage && (
           <p className="text-xs text-red-500 dark:text-red-400">{state.errorMessage}</p>
         )}

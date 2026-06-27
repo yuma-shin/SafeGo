@@ -1,12 +1,14 @@
 import type { AlertLevel, JudgmentResult, JMAWarningItem } from "@/types/jma";
 
-// /r8/ API コード体系（Qiita conqueror 記事準拠）
+// /r8/ API コード体系（気象庁 警戒レベル相当情報 / 警報・注意報 の 2 カテゴリに対応）
+// 特別警報（警戒レベル5相当）
 const SPECIAL_WARNING_CODES = new Set([
-  "32", "33", "35", "36", "37", "38", "39", // 特別警報 + 土砂災害特別警報
+  "32", "33", "35", "36", "37", "38", "39",
 ]);
-// 危険警報(43,48,49)・暴風警報(05)・高潮警報(08): 外出が著しく困難 → 自宅待機
-const CRITICAL_WARNING_CODES = new Set(["05", "08", "43", "48", "49"]);
-const WARNING_CODES = new Set(["02", "03", "04", "06", "07", "09"]);
+// 危険警報（警戒レベル4相当: 大雨危険警報・高潮危険警報・土砂災害危険警報）
+const CRITICAL_WARNING_CODES = new Set(["43", "48", "49"]);
+// 警報（警報・注意報カテゴリの警報: 暴風・暴風雪を含む全警報コード）
+const WARNING_CODES = new Set(["02", "03", "04", "05", "06", "07", "08", "09"]);
 const INACTIVE_STATUSES = new Set(["解除", "発表警報・注意報はなし"]);
 
 // /r8/ API のコード → 名称マッピング（Qiita conqueror 記事準拠）
@@ -74,18 +76,10 @@ export function makeJudgment(
   home: AlertLevel,
   office: AlertLevel
 ): JudgmentResult {
-  // 特別警報・特定警報が1つでもあれば最優先で自宅待機
-  if (
-    home === "special-warning" ||
-    office === "special-warning" ||
-    home === "critical-warning" ||
-    office === "critical-warning"
-  ) {
+  // 警戒レベル4以上（危険警報・特別警報）または警報・注意報カテゴリの警報以上 → 自宅待機
+  const stayHomeLevel: AlertLevel[] = ["special-warning", "critical-warning", "warning"];
+  if (stayHomeLevel.includes(home) || stayHomeLevel.includes(office)) {
     return "stay-home";
-  }
-  // 警報があれば在宅勤務推奨
-  if (home === "warning" || office === "warning") {
-    return "telework";
   }
   // 注意報以下はすべて通常出社可能
   return "commute-ok";

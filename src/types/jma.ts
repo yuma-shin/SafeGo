@@ -8,10 +8,9 @@ export type AlertLevel =
   | "none";
 
 // 出社可否判定
-// stay-home:  特別警報・特定警報 → 自宅待機・自治体の指示に従う
-// telework:   警報               → 自宅待機または在宅勤務を推奨
-// commute-ok: 注意報・なし       → 通常出社可能
-export type JudgmentResult = "stay-home" | "telework" | "commute-ok";
+// stay-home:  警報以上・危険警報（警戒レベル4）以上 → 自宅待機
+// commute-ok: 注意報・なし                          → 通常出社可能
+export type JudgmentResult = "stay-home" | "commute-ok";
 
 // エリアマスタエントリ（data/areas.json の各要素）
 export interface AreaEntry {

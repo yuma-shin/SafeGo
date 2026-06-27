@@ -36,8 +36,8 @@ const levelLabel: Record<AlertLevel, string> = {
   none: "警報なし",
   advisory: "注意報あり",
   warning: "警報あり",
-  "critical-warning": "特定警報あり",
-  "special-warning": "特別警報あり",
+  "critical-warning": "危険警報あり（レベル4）",
+  "special-warning": "特別警報あり（レベル5）",
 };
 
 const GLASS = "backdrop-blur-md border border-slate-200 dark:border-white/[0.12]";

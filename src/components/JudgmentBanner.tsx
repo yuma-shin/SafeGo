@@ -52,31 +52,10 @@ export default function JudgmentBanner({
           <p className="text-xl font-bold text-red-600 dark:text-red-300">自宅待機</p>
         </div>
         <p className="text-sm font-semibold text-red-600/80 dark:text-red-300/80 mb-1">
-          特別警報が発令されています
+          警報が発令されています
         </p>
         <p className="text-sm text-red-600/70 dark:text-red-400/70">
           自治体の指示に従い、安全を確保してください。
-        </p>
-      </div>
-    );
-  }
-
-  if (result === "telework") {
-    return (
-      <div
-        className={`rounded-2xl p-6 text-center ${GLASS}`}
-        style={{
-          background: "var(--banner-orange-bg)",
-          borderColor: "var(--banner-orange-border)",
-        }}
-      >
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <p className="text-xl font-bold text-orange-600 dark:text-orange-300">
-            自宅待機または在宅勤務を推奨
-          </p>
-        </div>
-        <p className="text-sm text-orange-600/70 dark:text-orange-300/70">
-          警報が発令されています。出社は控え、在宅勤務をご検討ください。
         </p>
       </div>
     );

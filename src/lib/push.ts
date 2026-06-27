@@ -4,7 +4,6 @@ import type { StoredSubscription, NotificationPayload } from "@/types/push";
 
 const JUDGMENT_TITLES: Record<JudgmentResult, string> = {
   "stay-home": "自宅待機",
-  "telework": "テレワーク推奨",
   "commute-ok": "出社可能",
 };
 
@@ -34,8 +33,6 @@ export function buildPayload(
     body = activeWarningNames.length > 0
       ? `発令中: ${activeWarningNames.join("・")}`
       : `自宅または勤務地に${ALERT_LEVEL_LABELS[homeAlertLevel] !== "警報なし" ? ALERT_LEVEL_LABELS[homeAlertLevel] : ALERT_LEVEL_LABELS[officeAlertLevel]}が発令中です`;
-  } else if (judgment === "telework") {
-    body = `自宅: ${ALERT_LEVEL_LABELS[homeAlertLevel]} / 勤務地: ${ALERT_LEVEL_LABELS[officeAlertLevel]}`;
   } else {
     body = "自宅: 警報なし / 勤務地: 警報なし";
   }

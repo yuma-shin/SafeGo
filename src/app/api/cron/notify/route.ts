@@ -69,6 +69,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   let processed = 0;
   let notified = 0;
   let errors = 0;
+  const errorDetails: string[] = [];
 
   for (const { id, data: sub } of subscriptions) {
     processed++;
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       if (!homeData && !officeData) {
         errors++;
+        errorDetails.push(`${id.slice(0, 8)}: JMA fetch failed`);
         continue;
       }
 
@@ -114,18 +116,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         await updateLastJudgment(id, currentJudgment);
         notified++;
       } else if (result.gone) {
-        console.info(`[cron/notify] HTTP 410: Subscription ${id} を削除`);
         await deleteSubscription(id);
         errors++;
+        errorDetails.push(`${id.slice(0, 8)}: HTTP 410 gone`);
       } else {
-        console.error(`[cron/notify] 送信エラー: ${result.error}`);
         errors++;
+        errorDetails.push(`${id.slice(0, 8)}: ${result.error}`);
       }
     } catch (err) {
-      console.error(`[cron/notify] Subscription ${id} 処理エラー:`, err);
       errors++;
+      errorDetails.push(`${id.slice(0, 8)}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
-  return NextResponse.json({ processed, notified, errors });
+  return NextResponse.json({ processed, notified, errors, errorDetails });
 }

@@ -113,10 +113,18 @@ function WarningCodeCombobox({ selected, onChange }: ComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [pos, setPos] = useState<DropdownPos>({ top: 0, left: 0, width: 0, maxHeight: 240 });
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const skipHUIRef = useRef(false);
 
-  useEffect(() => { setIsMounted(true); }, []);
+  useEffect(() => {
+    setIsMounted(true);
+    const mq = window.matchMedia("(max-width: 639px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   const selectedSet = new Set(selected);
   const filtered = ALL_CODES.filter(
@@ -220,34 +228,70 @@ function WarningCodeCombobox({ selected, onChange }: ComboboxProps) {
     </ComboboxOptions>
   ) : null;
 
-  return (
-    <div ref={wrapperRef} className="w-full">
-      {selected.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-2">
-          {selected.map((code) => {
-            const name = getNameForCode(code);
+  const tags = selected.length > 0 ? (
+    <div className="flex flex-wrap gap-1.5 mb-2">
+      {selected.map((code) => {
+        const name = getNameForCode(code);
+        return (
+          <span
+            key={code}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm
+              bg-indigo-50 dark:bg-indigo-500/20
+              text-indigo-600 dark:text-indigo-300
+              ring-1 ring-indigo-200 dark:ring-indigo-500/40"
+          >
+            {name}
+            <button
+              type="button"
+              aria-label={`${name}を削除`}
+              onClick={() => remove(code)}
+              className="ml-0.5 text-indigo-400 hover:text-indigo-700 dark:hover:text-white transition-colors"
+            >
+              ×
+            </button>
+          </span>
+        );
+      })}
+    </div>
+  ) : null;
+
+  if (isMobile) {
+    return (
+      <div>
+        {tags}
+        <select
+          value=""
+          onChange={(e) => { if (e.target.value) add(e.target.value); }}
+          aria-label="警報種別を選択"
+          className="w-full rounded-lg
+            bg-white dark:bg-white/5
+            py-2.5 pl-3 pr-3 text-sm
+            text-slate-800 dark:text-white
+            ring-1 ring-black/10 dark:ring-white/10
+            focus:outline-none focus:ring-2 focus:ring-indigo-500
+            transition-shadow"
+          style={{ fontSize: "16px" }}
+        >
+          <option value="">警報種別を選択...</option>
+          {WARNING_CODE_GROUPS.map(({ label, codes }) => {
+            const available = codes.filter(({ code }) => !selectedSet.has(code));
+            if (available.length === 0) return null;
             return (
-              <span
-                key={code}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm
-                  bg-indigo-50 dark:bg-indigo-500/20
-                  text-indigo-600 dark:text-indigo-300
-                  ring-1 ring-indigo-200 dark:ring-indigo-500/40"
-              >
-                {name}
-                <button
-                  type="button"
-                  aria-label={`${name}を削除`}
-                  onClick={() => remove(code)}
-                  className="ml-0.5 text-indigo-400 hover:text-indigo-700 dark:hover:text-white transition-colors"
-                >
-                  ×
-                </button>
-              </span>
+              <optgroup key={label} label={label}>
+                {available.map(({ code, name }) => (
+                  <option key={code} value={code}>{name}</option>
+                ))}
+              </optgroup>
             );
           })}
-        </div>
-      )}
+        </select>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={wrapperRef} className="w-full">
+      {tags}
 
       <Combobox
         immediate

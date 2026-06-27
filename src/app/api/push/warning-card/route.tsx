@@ -1,71 +1,39 @@
 import { ImageResponse } from "next/og";
-import type { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
-const LEVEL_LABELS: Record<string, string> = {
-  "special-warning": "特別警報",
-  "critical-warning": "危険警報",
-  "warning": "警報",
-  "advisory": "注意報",
-  "none": "警報なし",
-};
-
-const LEVEL_COLORS: Record<string, string> = {
+const LEVEL_COLOR: Record<string, string> = {
   "special-warning": "#dc2626",
   "critical-warning": "#ef4444",
-  "warning": "#f97316",
-  "advisory": "#eab308",
-  "none": "#22c55e",
+  "warning":          "#f97316",
+  "advisory":         "#eab308",
+  "none":             "#22c55e",
 };
 
-async function loadJapaneseFont(): Promise<ArrayBuffer | null> {
-  try {
-    // Google Fonts CSS API からフォント URL を取得
-    const cssRes = await fetch(
-      "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700",
-      {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        },
-      }
-    );
-    const css = await cssRes.text();
-    const match = css.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/);
-    if (!match) return null;
-    return fetch(match[1]).then((r) => r.arrayBuffer());
-  } catch {
-    return null;
-  }
-}
+const LEVEL_EN: Record<string, string> = {
+  "special-warning": "Special Warning",
+  "critical-warning": "Danger Warning",
+  "warning":          "Warning",
+  "advisory":         "Advisory",
+  "none":             "Clear",
+};
 
-export async function GET(req: NextRequest) {
+export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const judgment = searchParams.get("j") ?? "commute-ok";
-  const homeLevel = searchParams.get("hl") ?? "none";
+  const judgment    = searchParams.get("j")  ?? "commute-ok";
+  const homeLevel   = searchParams.get("hl") ?? "none";
   const officeLevel = searchParams.get("ol") ?? "none";
-  const homeCity = searchParams.get("hc") ?? "";
-  const officeCity = searchParams.get("oc") ?? "";
 
-  const isAlert = judgment === "stay-home";
-  const accent = isAlert ? "#ef4444" : "#22c55e";
-  const accentMuted = isAlert ? "#7f1d1d" : "#14532d";
-  const badgeText = isAlert ? "⚠ 自宅待機" : "✓ 出社可能";
-  const badgeColor = isAlert ? "#fca5a5" : "#86efac";
+  const isAlert   = judgment === "stay-home";
+  const accent    = isAlert ? "#ef4444" : "#22c55e";
+  const bgAccent  = isAlert ? "#450a0a" : "#052e16";
+  const titleText = isAlert ? "STAY HOME" : "COMMUTE OK";
+  const icon      = isAlert ? "⚠️" : "✅";
 
-  const fontData = await loadJapaneseFont();
-  const fonts = fontData
-    ? [
-        {
-          name: "NotoSansJP",
-          data: fontData,
-          weight: 700 as const,
-          style: "normal" as const,
-        },
-      ]
-    : [];
-  const fontFamily = fontData ? "NotoSansJP, sans-serif" : "sans-serif";
+  const homeColor   = LEVEL_COLOR[homeLevel]   ?? "#22c55e";
+  const officeColor = LEVEL_COLOR[officeLevel] ?? "#22c55e";
+  const homeEn      = LEVEL_EN[homeLevel]      ?? homeLevel;
+  const officeEn    = LEVEL_EN[officeLevel]    ?? officeLevel;
 
   return new ImageResponse(
     (
@@ -74,146 +42,145 @@ export async function GET(req: NextRequest) {
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
           backgroundColor: "#0f172a",
-          padding: "20px 24px",
-          fontFamily,
+          borderLeft: `8px solid ${accent}`,
         }}
       >
-        {/* ヘッダー：バッジ + SafeGo ロゴ */}
-        <div style={{ display: "flex", alignItems: "center" }}>
+        {/* アイコンエリア */}
+        <div
+          style={{
+            width: "90px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: bgAccent,
+            fontSize: "44px",
+          }}
+        >
+          {icon}
+        </div>
+
+        {/* コンテンツ */}
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            padding: "14px 18px",
+            gap: "10px",
+          }}
+        >
           <div
             style={{
               display: "flex",
-              alignItems: "center",
-              backgroundColor: accentMuted,
-              border: `1.5px solid ${accent}`,
-              borderRadius: "8px",
-              padding: "5px 14px",
-              color: badgeColor,
-              fontSize: "20px",
+              fontSize: "24px",
               fontWeight: 700,
+              color: accent,
+              letterSpacing: "0.05em",
             }}
           >
-            {badgeText}
+            {titleText}
           </div>
-          <div
-            style={{
-              marginLeft: "auto",
-              color: "#38bdf8",
-              fontSize: "15px",
-              fontWeight: 700,
-              display: "flex",
-            }}
-          >
-            SafeGo
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span
+                style={{
+                  display: "flex",
+                  color: "#64748b",
+                  fontSize: "12px",
+                  width: "42px",
+                  fontWeight: 600,
+                }}
+              >
+                HOME
+              </span>
+              <div
+                style={{
+                  display: "flex",
+                  flex: 1,
+                  height: "6px",
+                  backgroundColor: homeColor,
+                  borderRadius: "3px",
+                }}
+              />
+              <span
+                style={{
+                  display: "flex",
+                  color: homeColor,
+                  fontSize: "12px",
+                  width: "105px",
+                  fontWeight: 600,
+                }}
+              >
+                {homeEn}
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span
+                style={{
+                  display: "flex",
+                  color: "#64748b",
+                  fontSize: "12px",
+                  width: "42px",
+                  fontWeight: 600,
+                }}
+              >
+                WORK
+              </span>
+              <div
+                style={{
+                  display: "flex",
+                  flex: 1,
+                  height: "6px",
+                  backgroundColor: officeColor,
+                  borderRadius: "3px",
+                }}
+              />
+              <span
+                style={{
+                  display: "flex",
+                  color: officeColor,
+                  fontSize: "12px",
+                  width: "105px",
+                  fontWeight: 600,
+                }}
+              >
+                {officeEn}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* 地域行 */}
+        {/* SafeGo ブランディング */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "6px",
+            alignItems: "flex-end",
+            justifyContent: "flex-end",
+            padding: "8px 12px",
           }}
         >
-          {(homeCity || homeLevel !== "none") && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <span
-                style={{
-                  color: "#94a3b8",
-                  fontSize: "13px",
-                  minWidth: "44px",
-                  display: "flex",
-                }}
-              >
-                自宅
-              </span>
-              {homeCity && (
-                <span
-                  style={{
-                    color: "#e2e8f0",
-                    fontSize: "15px",
-                    fontWeight: 600,
-                    display: "flex",
-                  }}
-                >
-                  {homeCity}
-                </span>
-              )}
-              <span
-                style={{
-                  marginLeft: "auto",
-                  color: LEVEL_COLORS[homeLevel] ?? "#64748b",
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  display: "flex",
-                }}
-              >
-                {LEVEL_LABELS[homeLevel] ?? homeLevel}
-              </span>
-            </div>
-          )}
-          {(officeCity || officeLevel !== "none") && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <span
-                style={{
-                  color: "#94a3b8",
-                  fontSize: "13px",
-                  minWidth: "44px",
-                  display: "flex",
-                }}
-              >
-                勤務地
-              </span>
-              {officeCity && (
-                <span
-                  style={{
-                    color: "#e2e8f0",
-                    fontSize: "15px",
-                    fontWeight: 600,
-                    display: "flex",
-                  }}
-                >
-                  {officeCity}
-                </span>
-              )}
-              <span
-                style={{
-                  marginLeft: "auto",
-                  color: LEVEL_COLORS[officeLevel] ?? "#64748b",
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  display: "flex",
-                }}
-              >
-                {LEVEL_LABELS[officeLevel] ?? officeLevel}
-              </span>
-            </div>
-          )}
+          <span
+            style={{
+              display: "flex",
+              color: "#38bdf8",
+              fontSize: "13px",
+              fontWeight: 700,
+            }}
+          >
+            SafeGo
+          </span>
         </div>
       </div>
     ),
     {
       width: 480,
       height: 160,
-      fonts,
       headers: {
-        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+        "Cache-Control": "public, max-age=300, s-maxage=300",
       },
     }
   );

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { subscription, homeOfficeCode, homeCityCode, officeOfficeCode, officeCityCode } = body;
+  const { subscription, homeOfficeCode, homeCityCode, homeCityName, officeOfficeCode, officeCityCode, officeCityName } = body;
 
   if (
     !subscription?.endpoint ||
@@ -67,8 +67,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     auth: subscription.keys.auth,
     homeOfficeCode: homeOfficeCode ?? null,
     homeCityCode: homeCityCode ?? null,
+    homeCityName: homeCityName ?? null,
     officeOfficeCode: officeOfficeCode ?? null,
     officeCityCode: officeCityCode ?? null,
+    officeCityName: officeCityName ?? null,
     lastJudgment: null,
     registeredAt: new Date().toISOString(),
     lastSuccessAt: null,

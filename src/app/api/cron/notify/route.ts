@@ -17,6 +17,12 @@ import type { JMAWarningData } from "@/types/jma";
 
 export const runtime = "nodejs";
 
+function getAppUrl(req: NextRequest): string {
+  const host = req.headers.get("host") ?? "";
+  const proto = host.startsWith("localhost") ? "http" : "https";
+  return `${proto}://${host}`;
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const authHeader = req.headers.get("authorization");
   const expectedToken = process.env.CRON_SECRET;
@@ -66,6 +72,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return area.kinds.map((k) => ({ code: k.code, status: k.status }));
   }
 
+  const appUrl = getAppUrl(req);
   let processed = 0;
   let notified = 0;
   let errors = 0;
@@ -105,7 +112,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         currentJudgment,
         homeAlertLevel,
         officeAlertLevel,
-        activeWarningNames
+        activeWarningNames,
+        {
+          homeCityName: sub.homeCityName ?? null,
+          officeCityName: sub.officeCityName ?? null,
+          appUrl,
+        }
       );
 
       const result = await sendNotification(sub, payload);

@@ -15,8 +15,10 @@ export interface StoredSubscription {
   auth: string;
   homeOfficeCode: string | null;
   homeCityCode: string | null;
+  homeCityName: string | null;
   officeOfficeCode: string | null;
   officeCityCode: string | null;
+  officeCityName: string | null;
   lastJudgment: JudgmentResult | null;
   registeredAt: string;        // ISO 8601
   lastSuccessAt: string | null; // ISO 8601
@@ -33,8 +35,10 @@ export interface SubscribeRequest {
   };
   homeOfficeCode: string | null;
   homeCityCode: string | null;
+  homeCityName: string | null;
   officeOfficeCode: string | null;
   officeCityCode: string | null;
+  officeCityName: string | null;
 }
 
 /** 通知ペイロード（Service Worker が受け取る JSON） */
@@ -42,6 +46,7 @@ export interface NotificationPayload {
   title: string;
   body: string;
   icon: string;
+  image?: string;
   data: {
     url: string;
     judgment: JudgmentResult;

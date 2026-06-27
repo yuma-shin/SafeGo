@@ -20,27 +20,60 @@ export type PushSendResult =
   | { ok: false; gone: true }
   | { ok: false; gone: false; error: string };
 
+interface BuildPayloadOptions {
+  homeCityName?: string | null;
+  officeCityName?: string | null;
+  appUrl?: string;
+}
+
 export function buildPayload(
   judgment: JudgmentResult,
   homeAlertLevel: AlertLevel = "none",
   officeAlertLevel: AlertLevel = "none",
-  activeWarningNames: string[] = []
+  activeWarningNames: string[] = [],
+  options: BuildPayloadOptions = {}
 ): NotificationPayload {
+  const { homeCityName, officeCityName, appUrl } = options;
   const title = JUDGMENT_TITLES[judgment];
-  let body: string;
 
+  const homeLabel = homeCityName ? `自宅（${homeCityName}）` : "自宅";
+  const officeLabel = officeCityName ? `勤務地（${officeCityName}）` : "勤務地";
+
+  let body: string;
   if (judgment === "stay-home") {
-    body = activeWarningNames.length > 0
-      ? `発令中: ${activeWarningNames.join("・")}`
-      : `自宅または勤務地に${ALERT_LEVEL_LABELS[homeAlertLevel] !== "警報なし" ? ALERT_LEVEL_LABELS[homeAlertLevel] : ALERT_LEVEL_LABELS[officeAlertLevel]}が発令中です`;
+    const parts: string[] = [];
+    if (homeAlertLevel !== "none") {
+      const names = activeWarningNames.filter((_, i) => i < 3);
+      parts.push(`${homeLabel}: ${names.length > 0 ? names.join("・") : ALERT_LEVEL_LABELS[homeAlertLevel]}`);
+    }
+    if (officeAlertLevel !== "none" && (homeCityName !== officeCityName || homeAlertLevel === "none")) {
+      parts.push(`${officeLabel}: ${ALERT_LEVEL_LABELS[officeAlertLevel]}`);
+    }
+    body = parts.length > 0 ? parts.join(" ／ ") : `自宅または勤務地に${ALERT_LEVEL_LABELS[homeAlertLevel !== "none" ? homeAlertLevel : officeAlertLevel]}が発令中です`;
   } else {
-    body = "自宅: 警報なし / 勤務地: 警報なし";
+    const homePart = `${homeLabel}: ${ALERT_LEVEL_LABELS[homeAlertLevel]}`;
+    const officePart = `${officeLabel}: ${ALERT_LEVEL_LABELS[officeAlertLevel]}`;
+    body = `${homePart} ／ ${officePart}`;
+  }
+
+  // 通知カード画像 URL（appUrl が設定されている場合のみ）
+  let image: string | undefined;
+  if (appUrl) {
+    const params = new URLSearchParams({
+      j: judgment,
+      hl: homeAlertLevel,
+      ol: officeAlertLevel,
+      ...(homeCityName ? { hc: homeCityName } : {}),
+      ...(officeCityName ? { oc: officeCityName } : {}),
+    });
+    image = `${appUrl}/api/push/warning-card?${params.toString()}`;
   }
 
   return {
     title,
     body,
     icon: "/icons/icon-192.svg",
+    ...(image ? { image } : {}),
     data: {
       url: "/",
       judgment,

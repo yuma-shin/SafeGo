@@ -137,8 +137,10 @@ export function usePushNotification(
           },
           homeOfficeCode: home?.officeCode ?? null,
           homeCityCode: home?.cityCode ?? null,
+          homeCityName: home?.cityName ?? null,
           officeOfficeCode: office?.officeCode ?? null,
           officeCityCode: office?.cityCode ?? null,
+          officeCityName: office?.cityName ?? null,
         }),
       });
 

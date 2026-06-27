@@ -17,17 +17,6 @@ import type { JMAWarningData } from "@/types/jma";
 
 export const runtime = "nodejs";
 
-function getAppUrl(req: NextRequest): string {
-  // 環境変数が設定されていれば最優先（カスタムドメイン・本番 URL を明示指定）
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
-  }
-  // Vercel が設定する x-forwarded-host / x-forwarded-proto を利用
-  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "";
-  const proto = req.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
-}
-
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const authHeader = req.headers.get("authorization");
   const expectedToken = process.env.CRON_SECRET;
@@ -77,7 +66,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return area.kinds.map((k) => ({ code: k.code, status: k.status }));
   }
 
-  const appUrl = getAppUrl(req);
   let processed = 0;
   let notified = 0;
   let errors = 0;
@@ -121,7 +109,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         {
           homeCityName: sub.homeCityName ?? null,
           officeCityName: sub.officeCityName ?? null,
-          appUrl,
         }
       );
 

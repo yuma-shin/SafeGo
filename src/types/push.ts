@@ -46,7 +46,6 @@ export interface NotificationPayload {
   title: string;
   body: string;
   icon: string;
-  image?: string;
   data: {
     url: string;
     judgment: JudgmentResult;

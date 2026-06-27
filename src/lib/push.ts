@@ -23,7 +23,6 @@ export type PushSendResult =
 interface BuildPayloadOptions {
   homeCityName?: string | null;
   officeCityName?: string | null;
-  appUrl?: string;
 }
 
 export function buildPayload(
@@ -33,7 +32,7 @@ export function buildPayload(
   activeWarningNames: string[] = [],
   options: BuildPayloadOptions = {}
 ): NotificationPayload {
-  const { homeCityName, officeCityName, appUrl } = options;
+  const { homeCityName, officeCityName } = options;
   const title = JUDGMENT_TITLES[judgment];
 
   const homeLabel = homeCityName ? `自宅（${homeCityName}）` : "自宅";
@@ -56,24 +55,10 @@ export function buildPayload(
     body = `${homePart} ／ ${officePart}`;
   }
 
-  // 通知カード画像 URL（appUrl が設定されている場合のみ）
-  let image: string | undefined;
-  if (appUrl) {
-    const params = new URLSearchParams({
-      j: judgment,
-      hl: homeAlertLevel,
-      ol: officeAlertLevel,
-      ...(homeCityName ? { hc: homeCityName } : {}),
-      ...(officeCityName ? { oc: officeCityName } : {}),
-    });
-    image = `${appUrl}/api/push/warning-card?${params.toString()}`;
-  }
-
   return {
     title,
     body,
     icon: "/icons/icon-192.svg",
-    ...(image ? { image } : {}),
     data: {
       url: "/",
       judgment,

@@ -20,7 +20,6 @@ self.addEventListener("push", (event) => {
     body: payload.body ?? "",
     icon: payload.icon ?? "/icons/icon-192.svg",
     badge: "/icons/icon-192.svg",
-    ...(payload.image ? { image: payload.image } : {}),
     data: payload.data ?? {},
   };
 

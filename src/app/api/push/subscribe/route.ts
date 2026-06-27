@@ -3,7 +3,8 @@ import {
   saveSubscription,
   generateSubscriptionId,
 } from "@/lib/kv";
-import type { SubscribeRequest, StoredSubscription } from "@/types/push";
+import { ALERT_LEVEL_ORDER, VALID_WARNING_CODES } from "@/lib/judgment";
+import type { SubscribeRequest, StoredSubscription, StayHomeCondition } from "@/types/push";
 
 export const runtime = "nodejs";
 
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { subscription, homeOfficeCode, homeCityCode, homeCityName, officeOfficeCode, officeCityCode, officeCityName } = body;
+  const { subscription, homeOfficeCode, homeCityCode, homeCityName, officeOfficeCode, officeCityCode, officeCityName, stayHomeCondition: rawCondition } = body;
 
   if (
     !subscription?.endpoint ||
@@ -60,6 +61,37 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // stayHomeCondition バリデーション
+  let stayHomeCondition: StayHomeCondition | null = null;
+  if (rawCondition) {
+    if (rawCondition.levelThreshold !== undefined) {
+      const validThresholds = ALERT_LEVEL_ORDER.filter((l) => l !== "none");
+      if (!validThresholds.includes(rawCondition.levelThreshold as never)) {
+        return NextResponse.json(
+          { error: "stayHomeCondition.levelThreshold が無効な値です", code: "INVALID_PARAMS" },
+          { status: 400 }
+        );
+      }
+    }
+    if (rawCondition.warningCodes !== undefined && rawCondition.warningCodes.length > 0) {
+      const invalidCodes = rawCondition.warningCodes.filter((c) => !VALID_WARNING_CODES.has(c));
+      if (invalidCodes.length > 0) {
+        return NextResponse.json(
+          {
+            error: `stayHomeCondition.warningCodes に無効なコードが含まれています: ${invalidCodes.join(", ")}`,
+            code: "INVALID_PARAMS",
+          },
+          { status: 400 }
+        );
+      }
+    }
+    const hasLevel = rawCondition.levelThreshold !== undefined;
+    const hasCodes = rawCondition.warningCodes !== undefined && rawCondition.warningCodes.length > 0;
+    if (hasLevel || hasCodes) {
+      stayHomeCondition = rawCondition as StayHomeCondition;
+    }
+  }
+
   const id = generateSubscriptionId(subscription.endpoint);
   const data: StoredSubscription = {
     endpoint: subscription.endpoint,
@@ -74,6 +106,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     lastJudgment: null,
     registeredAt: new Date().toISOString(),
     lastSuccessAt: null,
+    stayHomeCondition,
   };
 
   try {

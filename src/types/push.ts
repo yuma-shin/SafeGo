@@ -1,4 +1,13 @@
-import type { JudgmentResult } from "@/types/jma";
+import type { AlertLevel, JudgmentResult } from "@/types/jma";
+
+/** "none" を除いた警戒レベル（閾値として意味のある値のみ） */
+export type AlertLevelThreshold = Exclude<AlertLevel, "none">;
+
+/** ユーザーが指定する自宅待機の発動条件 */
+export interface StayHomeCondition {
+  levelThreshold?: AlertLevelThreshold;
+  warningCodes?: string[];
+}
 
 /** ブラウザの通知許可状態 */
 export type PushPermissionState =
@@ -22,6 +31,7 @@ export interface StoredSubscription {
   lastJudgment: JudgmentResult | null;
   registeredAt: string;        // ISO 8601
   lastSuccessAt: string | null; // ISO 8601
+  stayHomeCondition: StayHomeCondition | null;
 }
 
 /** POST /api/push/subscribe リクエストボディ */
@@ -39,6 +49,7 @@ export interface SubscribeRequest {
   officeOfficeCode: string | null;
   officeCityCode: string | null;
   officeCityName: string | null;
+  stayHomeCondition?: StayHomeCondition | null;
 }
 
 /** 通知ペイロード（Service Worker が受け取る JSON） */

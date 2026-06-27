@@ -24,19 +24,19 @@ const LS_OFFICE_KEY = "wac_office";
 
 // ページ背景グラデーション（警報レベル × テーマ）
 const PAGE_GRADIENTS_DARK: Record<AlertLevel, string> = {
-  none: "linear-gradient(150deg, #0c4a6e 0%, #0f172a 55%, #020617 100%)",
-  advisory: "linear-gradient(150deg, #6b3a00 0%, #0f172a 55%, #020617 100%)",
-  warning: "linear-gradient(150deg, #7c2d12 0%, #1e1b2e 55%, #020617 100%)",
-  "critical-warning": "linear-gradient(150deg, #7f1d1d 0%, #1c1c2e 55%, #020617 100%)",
-  "special-warning": "linear-gradient(150deg, #4c0519 0%, #1a0000 55%, #000000 100%)",
+  none: "linear-gradient(135deg, #111827 0%, #050810 50%, #0a0a0a 100%)",
+  advisory: "linear-gradient(135deg, #1a1200 0%, #0d0900 50%, #0a0a0a 100%)",
+  warning: "linear-gradient(135deg, #1a0800 0%, #0d0500 50%, #0a0a0a 100%)",
+  "critical-warning": "linear-gradient(135deg, #1a0303 0%, #0d0202 50%, #0a0a0a 100%)",
+  "special-warning": "linear-gradient(135deg, #1a0308 0%, #0d0205 50%, #0a0a0a 100%)",
 };
 
 const PAGE_GRADIENTS_LIGHT: Record<AlertLevel, string> = {
-  none: "linear-gradient(150deg, #dbeafe 0%, #e0f2fe 40%, #f0f9ff 100%)",
-  advisory: "linear-gradient(150deg, #fef9c3 0%, #fffbeb 55%, #fefce8 100%)",
-  warning: "linear-gradient(150deg, #fed7aa 0%, #fff7ed 55%, #fefce8 100%)",
-  "critical-warning": "linear-gradient(150deg, #fecaca 0%, #fff5f5 55%, #fafafa 100%)",
-  "special-warning": "linear-gradient(150deg, #fecdd3 0%, #ffe4e6 55%, #fff1f2 100%)",
+  none: "linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 50%, #F9FAFB 100%)",
+  advisory: "linear-gradient(135deg, #FFFBEB 0%, #FEFCE8 50%, #F9FAFB 100%)",
+  warning: "linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 50%, #F9FAFB 100%)",
+  "critical-warning": "linear-gradient(135deg, #FFF5F5 0%, #FFF1F2 50%, #F9FAFB 100%)",
+  "special-warning": "linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 50%, #F9FAFB 100%)",
 };
 
 function getWorstLevel(levels: (AlertLevel | undefined)[]): AlertLevel {
@@ -241,18 +241,20 @@ export default function Home() {
         <ThemeToggle theme={theme} toggle={toggle} />
       </div>
 
-      <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full relative z-10 flex flex-col justify-center">
-        <JudgmentBanner result={judgment} isLoading={isLoading} />
+      <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full relative flex flex-col justify-center">
+        <div className="anim-fade-slide-up">
+          <JudgmentBanner result={judgment} isLoading={isLoading} />
+        </div>
 
         {cachedAt && (
-          <p className="text-xs text-center text-white/35 mt-3 mb-2">
+          <p className="text-xs text-center text-white/35 mt-3 mb-2 anim-fade-slide-up anim-delay-1">
             最終更新:{" "}
             {new Date(cachedAt).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}
           </p>
         )}
 
         {/* Location inputs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 mb-4 anim-fade-slide-up anim-delay-2 relative z-20">
           <LocationInput
             label="自宅"
             value={state.home}
@@ -268,7 +270,7 @@ export default function Home() {
         </div>
 
         {/* Weather cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 anim-fade-slide-up anim-delay-3">
           <WeatherCard
             label="自宅"
             state={state.homeWarnings}
@@ -285,8 +287,12 @@ export default function Home() {
           />
         </div>
 
-        <PushNotificationButton home={state.home} office={state.office} />
-        <InstallPrompt />
+        <div className="anim-fade-slide-up anim-delay-4">
+          <PushNotificationButton home={state.home} office={state.office} />
+        </div>
+        <div className="anim-fade-slide-up anim-delay-5">
+          <InstallPrompt />
+        </div>
       </main>
 
       <Footer />

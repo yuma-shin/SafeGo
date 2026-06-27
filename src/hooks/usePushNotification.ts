@@ -1,17 +1,29 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { PushPermissionState } from "@/types/push";
+import type { PushPermissionState, StayHomeCondition } from "@/types/push";
 import type { AreaEntry } from "@/types/jma";
 
 const REGISTERED_LOCATION_KEY = "push_registered_location";
 
-function loadRegisteredLocation(): { home: AreaEntry | null; office: AreaEntry | null } {
+interface RegisteredData {
+  home: AreaEntry | null;
+  office: AreaEntry | null;
+  stayHomeCondition: StayHomeCondition | null;
+}
+
+function loadRegisteredData(): RegisteredData {
   try {
     const raw = localStorage.getItem(REGISTERED_LOCATION_KEY);
-    return raw ? JSON.parse(raw) : { home: null, office: null };
+    if (!raw) return { home: null, office: null, stayHomeCondition: null };
+    const parsed = JSON.parse(raw);
+    return {
+      home: parsed.home ?? null,
+      office: parsed.office ?? null,
+      stayHomeCondition: parsed.stayHomeCondition ?? null,
+    };
   } catch {
-    return { home: null, office: null };
+    return { home: null, office: null, stayHomeCondition: null };
   }
 }
 
@@ -21,6 +33,7 @@ interface PushNotificationState {
   errorMessage: string | null;
   registeredHome: AreaEntry | null;
   registeredOffice: AreaEntry | null;
+  registeredCondition: StayHomeCondition | null;
 }
 
 interface UsePushNotificationReturn {
@@ -33,7 +46,8 @@ const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
 export function usePushNotification(
   home: AreaEntry | null,
-  office: AreaEntry | null
+  office: AreaEntry | null,
+  stayHomeCondition: StayHomeCondition | null = null
 ): UsePushNotificationReturn {
   const [state, setState] = useState<PushNotificationState>({
     permission: "default",
@@ -41,6 +55,7 @@ export function usePushNotification(
     errorMessage: null,
     registeredHome: null,
     registeredOffice: null,
+    registeredCondition: null,
   });
 
   const swRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
@@ -67,12 +82,13 @@ export function usePushNotification(
         const existingSub = await registration.pushManager.getSubscription();
         if (existingSub) {
           subscriptionRef.current = existingSub;
-          const { home: regHome, office: regOffice } = loadRegisteredLocation();
+          const { home: regHome, office: regOffice, stayHomeCondition: regCondition } = loadRegisteredData();
           setState((prev) => ({
             ...prev,
             permission: "subscribed",
             registeredHome: regHome,
             registeredOffice: regOffice,
+            registeredCondition: regCondition,
           }));
         } else {
           setState((prev) => ({
@@ -141,12 +157,16 @@ export function usePushNotification(
           officeOfficeCode: office?.officeCode ?? null,
           officeCityCode: office?.cityCode ?? null,
           officeCityName: office?.cityName ?? null,
+          stayHomeCondition,
         }),
       });
 
       if (!res.ok) throw new Error(`サーバーエラー: ${res.status}`);
 
-      localStorage.setItem(REGISTERED_LOCATION_KEY, JSON.stringify({ home, office }));
+      localStorage.setItem(
+        REGISTERED_LOCATION_KEY,
+        JSON.stringify({ home, office, stayHomeCondition })
+      );
 
       setState((prev) => ({
         ...prev,
@@ -154,6 +174,7 @@ export function usePushNotification(
         permission: "subscribed",
         registeredHome: home,
         registeredOffice: office,
+        registeredCondition: stayHomeCondition,
       }));
     } catch (err) {
       console.error("[usePushNotification] 購読エラー:", err);
@@ -192,6 +213,7 @@ export function usePushNotification(
         permission: "default",
         registeredHome: null,
         registeredOffice: null,
+        registeredCondition: null,
       }));
     } catch (err) {
       console.error("[usePushNotification] 解除エラー:", err);

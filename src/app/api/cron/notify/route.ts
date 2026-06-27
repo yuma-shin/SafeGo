@@ -9,7 +9,7 @@ import { buildPayload, sendNotification } from "@/lib/push";
 import { fetchJMAWarning } from "@/lib/jma";
 import {
   classifyAlertLevel,
-  makeJudgment,
+  makeJudgmentWithCondition,
   getWarningName,
   isActiveWarning,
 } from "@/lib/judgment";
@@ -92,7 +92,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       const homeAlertLevel = classifyAlertLevel(homeItems);
       const officeAlertLevel = classifyAlertLevel(officeItems);
-      const currentJudgment = makeJudgment(homeAlertLevel, officeAlertLevel);
+      const currentJudgment = makeJudgmentWithCondition(
+        homeAlertLevel,
+        officeAlertLevel,
+        sub.stayHomeCondition ?? null,
+        homeItems,
+        officeItems
+      );
 
       if (currentJudgment === sub.lastJudgment) continue;
 

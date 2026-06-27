@@ -9,7 +9,7 @@ interface FooterProps {
 export default function Footer({ className = "" }: FooterProps) {
   return (
     <footer
-      className={`sticky bottom-0 relative z-10 w-full px-4 py-3 text-xs text-slate-400 dark:text-white/25 ${className}`}
+      className={`sticky bottom-0 z-10 w-full px-4 py-3 text-xs text-slate-400 dark:text-white/20 backdrop-blur-md bg-white/80 dark:bg-black/70 ${className}`}
       style={{ borderTop: "1px solid var(--footer-border)" }}
     >
       <p className="text-center leading-relaxed">

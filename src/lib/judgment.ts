@@ -1,4 +1,5 @@
 import type { AlertLevel, JudgmentResult, JMAWarningItem } from "@/types/jma";
+import type { StayHomeCondition } from "@/types/push";
 
 // /r8/ API コード体系（気象庁 警戒レベル相当情報 / 警報・注意報 の 2 カテゴリに対応）
 // 特別警報（警戒レベル5相当）
@@ -87,4 +88,52 @@ export function makeJudgment(
 
 export function getWarningName(code: string): string {
   return WARNING_NAMES[code] ?? `警報・注意報(${code})`;
+}
+
+/** 警戒レベルの昇順配列。indexOf で大小比較に使用 */
+export const ALERT_LEVEL_ORDER: readonly AlertLevel[] = [
+  "none",
+  "advisory",
+  "warning",
+  "critical-warning",
+  "special-warning",
+] as const;
+
+/** JMA /r8/ API で使用される全有効警報コードのセット */
+export const VALID_WARNING_CODES: ReadonlySet<string> = new Set(Object.keys(WARNING_NAMES));
+
+export function isLevelAtLeast(level: AlertLevel, threshold: AlertLevel): boolean {
+  const li = ALERT_LEVEL_ORDER.indexOf(level);
+  const ti = ALERT_LEVEL_ORDER.indexOf(threshold);
+  if (li === -1 || ti === -1) return false;
+  return li >= ti;
+}
+
+export function makeJudgmentWithCondition(
+  home: AlertLevel,
+  office: AlertLevel,
+  condition: StayHomeCondition | null,
+  homeItems: JMAWarningItem[],
+  officeItems: JMAWarningItem[]
+): JudgmentResult {
+  if (!condition) return makeJudgment(home, office);
+
+  if (condition.levelThreshold) {
+    if (
+      isLevelAtLeast(home, condition.levelThreshold) ||
+      isLevelAtLeast(office, condition.levelThreshold)
+    ) {
+      return "stay-home";
+    }
+  }
+
+  if (condition.warningCodes && condition.warningCodes.length > 0) {
+    const codes = new Set(condition.warningCodes);
+    const allItems = [...homeItems, ...officeItems];
+    if (allItems.some((item) => isActiveWarning(item.status) && codes.has(item.code))) {
+      return "stay-home";
+    }
+  }
+
+  return "commute-ok";
 }

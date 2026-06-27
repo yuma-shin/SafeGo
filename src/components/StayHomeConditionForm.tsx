@@ -251,7 +251,7 @@ function WarningCodeCombobox({ selected, onChange }: ComboboxProps) {
 
       <Combobox
         immediate
-        onChange={(code: string) => {
+        onChange={(code: string | null) => {
           if (skipHUIRef.current) { skipHUIRef.current = false; return; }
           if (code) add(code);
         }}

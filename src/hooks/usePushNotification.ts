@@ -4,30 +4,51 @@ import { useEffect, useRef, useState } from "react";
 import type { PushPermissionState } from "@/types/push";
 import type { AreaEntry } from "@/types/jma";
 
+const REGISTERED_LOCATION_KEY = "push_registered_location";
+
+function loadRegisteredLocation(): { home: AreaEntry | null; office: AreaEntry | null } {
+  try {
+    const raw = localStorage.getItem(REGISTERED_LOCATION_KEY);
+    return raw ? JSON.parse(raw) : { home: null, office: null };
+  } catch {
+    return { home: null, office: null };
+  }
+}
+
 interface PushNotificationState {
   permission: PushPermissionState;
   isLoading: boolean;
   errorMessage: string | null;
+  registeredHome: AreaEntry | null;
+  registeredOffice: AreaEntry | null;
 }
 
 interface UsePushNotificationReturn {
   state: PushNotificationState;
-  subscribe: (home: AreaEntry | null, office: AreaEntry | null) => Promise<void>;
+  subscribe: () => Promise<void>;
   unsubscribe: () => Promise<void>;
 }
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
-
-export function usePushNotification(): UsePushNotificationReturn {
+export function usePushNotification(
+  home: AreaEntry | null,
+  office: AreaEntry | null
+): UsePushNotificationReturn {
   const [state, setState] = useState<PushNotificationState>({
     permission: "default",
     isLoading: false,
     errorMessage: null,
+    registeredHome: null,
+    registeredOffice: null,
   });
 
   const swRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const subscriptionRef = useRef<PushSubscription | null>(null);
+  // undefined = 初回レンダリング前、null/string = 初期値確定済み
+  const prevHomeCityCodeRef = useRef<string | null | undefined>(undefined);
+  const prevOfficeCityCodeRef = useRef<string | null | undefined>(undefined);
+  const subscribeRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -49,7 +70,13 @@ export function usePushNotification(): UsePushNotificationReturn {
         const existingSub = await registration.pushManager.getSubscription();
         if (existingSub) {
           subscriptionRef.current = existingSub;
-          setState((prev) => ({ ...prev, permission: "subscribed" }));
+          const { home: regHome, office: regOffice } = loadRegisteredLocation();
+          setState((prev) => ({
+            ...prev,
+            permission: "subscribed",
+            registeredHome: regHome,
+            registeredOffice: regOffice,
+          }));
         } else {
           setState((prev) => ({
             ...prev,
@@ -67,10 +94,39 @@ export function usePushNotification(): UsePushNotificationReturn {
       });
   }, []);
 
-  async function subscribe(
-    home: AreaEntry | null,
-    office: AreaEntry | null
-  ): Promise<void> {
+  // 地域変更を検知して自動再登録
+  useEffect(() => {
+    const currHome = home?.cityCode ?? null;
+    const currOffice = office?.cityCode ?? null;
+
+    // 初回レンダリング時は基準値を記録するだけ
+    if (prevHomeCityCodeRef.current === undefined) {
+      prevHomeCityCodeRef.current = currHome;
+      prevOfficeCityCodeRef.current = currOffice;
+      return;
+    }
+
+    // 前回から変化がなければスキップ
+    if (prevHomeCityCodeRef.current === currHome && prevOfficeCityCodeRef.current === currOffice) {
+      return;
+    }
+
+    prevHomeCityCodeRef.current = currHome;
+    prevOfficeCityCodeRef.current = currOffice;
+
+    if (state.permission !== "subscribed" || state.isLoading) return;
+
+    const homeChanged = currHome !== (state.registeredHome?.cityCode ?? null);
+    const officeChanged = currOffice !== (state.registeredOffice?.cityCode ?? null);
+
+    if (homeChanged || officeChanged) {
+      void subscribeRef.current();
+    }
+    // state.registeredHome/Office の変化は追わない（登録直後のループを防ぐため）
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [home?.cityCode, office?.cityCode]);
+
+  async function subscribe(): Promise<void> {
     if (!home && !office) {
       setState((prev) => ({
         ...prev,
@@ -122,7 +178,15 @@ export function usePushNotification(): UsePushNotificationReturn {
 
       if (!res.ok) throw new Error(`サーバーエラー: ${res.status}`);
 
-      setState((prev) => ({ ...prev, isLoading: false, permission: "subscribed" }));
+      localStorage.setItem(REGISTERED_LOCATION_KEY, JSON.stringify({ home, office }));
+
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        permission: "subscribed",
+        registeredHome: home,
+        registeredOffice: office,
+      }));
     } catch (err) {
       console.error("[usePushNotification] 購読エラー:", err);
       setState((prev) => ({
@@ -132,6 +196,8 @@ export function usePushNotification(): UsePushNotificationReturn {
       }));
     }
   }
+
+  subscribeRef.current = subscribe;
 
   async function unsubscribe(): Promise<void> {
     setState((prev) => ({ ...prev, isLoading: true, errorMessage: null }));
@@ -150,7 +216,15 @@ export function usePushNotification(): UsePushNotificationReturn {
         });
       }
 
-      setState((prev) => ({ ...prev, isLoading: false, permission: "default" }));
+      localStorage.removeItem(REGISTERED_LOCATION_KEY);
+
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        permission: "default",
+        registeredHome: null,
+        registeredOffice: null,
+      }));
     } catch (err) {
       console.error("[usePushNotification] 解除エラー:", err);
       setState((prev) => ({

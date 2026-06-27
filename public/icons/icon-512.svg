@@ -1,4 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="64" fill="#0c4a6e"/>
-  <text x="256" y="350" font-size="280" text-anchor="middle" font-family="sans-serif">🏠</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="512" height="512" fill="none">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="35%" r="58%">
+      <stop offset="0%" stop-color="#0c4a6e" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="canopy" x1="96" y1="24" x2="96" y2="104" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7dd3fc"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Dark navy background -->
+  <rect width="192" height="192" rx="38" fill="#0f172a"/>
+  <!-- Atmospheric blue glow -->
+  <rect width="192" height="192" rx="38" fill="url(#glow)"/>
+
+  <!-- Umbrella canopy: half-circle + 3 scallops -->
+  <path d="M 34 86 A 62 62 0 0 1 158 86 Q 138 104 118 86 Q 96 104 74 86 Q 54 104 34 86 Z"
+        fill="url(#canopy)"/>
+  <!-- Glass shimmer on canopy -->
+  <path d="M 64 56 Q 96 32 128 56"
+        fill="none" stroke="white" stroke-opacity="0.22" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Handle: down then curves right, terminates at navigation indicator -->
+  <path d="M 96 86 L 96 138 Q 96 158 116 158 L 124 158"
+        fill="none" stroke="#38bdf8" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- Navigation location accuracy ring -->
+  <circle cx="138" cy="148" r="22" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-opacity="0.4"/>
+
+  <!-- Paper airplane pointing upper-right (GPS/navigation style) -->
+  <g transform="translate(138, 148) rotate(-45)">
+    <!-- Body -->
+    <path d="M 16 0 L -16 -10 L -5 0 L -16 10 Z" fill="#38bdf8"/>
+    <!-- Upper wing highlight showing paper fold -->
+    <path d="M 16 0 L -16 -10 L -5 0 Z" fill="#7dd3fc" fill-opacity="0.65"/>
+  </g>
 </svg>

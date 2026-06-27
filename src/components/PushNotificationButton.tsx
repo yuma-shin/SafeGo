@@ -51,8 +51,16 @@ function BellOffIcon() {
   );
 }
 
+function LocationLabel({ label, area }: { label: string; area: AreaEntry }) {
+  return (
+    <span className="text-xs text-slate-500 dark:text-white/40">
+      {label}: {area.cityName}（{area.officeName}）
+    </span>
+  );
+}
+
 export default function PushNotificationButton({ home, office }: Props) {
-  const { state, subscribe, unsubscribe } = usePushNotification();
+  const { state, subscribe, unsubscribe } = usePushNotification(home, office);
 
   if (state.permission === "unsupported") return null;
 
@@ -74,6 +82,7 @@ export default function PushNotificationButton({ home, office }: Props) {
   }
 
   if (state.permission === "subscribed") {
+    const { registeredHome, registeredOffice } = state;
     return (
       <div
         className={`rounded-2xl px-4 py-3 mt-4 flex flex-col items-center gap-2 ${GLASS}`}
@@ -81,8 +90,14 @@ export default function PushNotificationButton({ home, office }: Props) {
       >
         <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
           <BellIcon />
-          <span>通知が有効です</span>
+          <span>{state.isLoading ? "設定を更新中..." : "通知が有効です"}</span>
         </div>
+        {!state.isLoading && (registeredHome || registeredOffice) && (
+          <div className="flex flex-col items-center gap-0.5">
+            {registeredHome && <LocationLabel label="自宅" area={registeredHome} />}
+            {registeredOffice && <LocationLabel label="勤務地" area={registeredOffice} />}
+          </div>
+        )}
         <button
           type="button"
           onClick={() => void unsubscribe()}
@@ -93,7 +108,7 @@ export default function PushNotificationButton({ home, office }: Props) {
             border border-slate-200 dark:border-white/[0.12]
             disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {state.isLoading ? "処理中..." : "通知を解除する"}
+          通知を解除する
         </button>
         {state.errorMessage && (
           <p className="text-xs text-red-500 dark:text-red-400">{state.errorMessage}</p>
@@ -111,7 +126,7 @@ export default function PushNotificationButton({ home, office }: Props) {
     >
       <button
         type="button"
-        onClick={() => void subscribe(home, office)}
+        onClick={() => void subscribe()}
         disabled={state.isLoading || locationUnset}
         className="flex items-center gap-2 text-sm font-medium px-4 py-1.5 rounded-full transition-colors
           bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20

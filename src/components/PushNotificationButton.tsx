@@ -83,6 +83,12 @@ export default function PushNotificationButton({ home, office }: Props) {
 
   if (state.permission === "subscribed") {
     const { registeredHome, registeredOffice } = state;
+    const homeChanged = (home?.cityCode ?? null) !== (registeredHome?.cityCode ?? null);
+    const officeChanged = (office?.cityCode ?? null) !== (registeredOffice?.cityCode ?? null);
+    const locationChanged = homeChanged || officeChanged;
+    const hasRegistered = registeredHome !== null || registeredOffice !== null;
+    const hasCurrentLocation = home !== null || office !== null;
+
     return (
       <div
         className={`rounded-2xl px-4 py-3 mt-4 flex flex-col items-center gap-2 ${GLASS}`}
@@ -92,12 +98,43 @@ export default function PushNotificationButton({ home, office }: Props) {
           <BellIcon />
           <span>{state.isLoading ? "設定を更新中..." : "通知が有効です"}</span>
         </div>
-        {!state.isLoading && (registeredHome || registeredOffice) && (
+
+        {/* 登録済み地域 */}
+        {!state.isLoading && hasRegistered && (
           <div className="flex flex-col items-center gap-0.5">
             {registeredHome && <LocationLabel label="自宅" area={registeredHome} />}
             {registeredOffice && <LocationLabel label="勤務地" area={registeredOffice} />}
           </div>
         )}
+
+        {/* 地域変更または未登録（ゾンビ）状態の案内 */}
+        {!state.isLoading && locationChanged && hasCurrentLocation && (
+          <>
+            <p className="text-xs text-amber-500 dark:text-amber-400">
+              地域設定が変更されています
+            </p>
+            <button
+              type="button"
+              onClick={() => void subscribe()}
+              disabled={state.isLoading}
+              className="text-xs px-3 py-1 rounded-full transition-colors
+                bg-sky-100 hover:bg-sky-200 dark:bg-sky-900/40 dark:hover:bg-sky-800/50
+                text-sky-700 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100
+                border border-sky-300 dark:border-sky-700
+                disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              通知地域を更新する
+            </button>
+          </>
+        )}
+
+        {/* 登録なし・現在地もなし（完全ゾンビ） */}
+        {!state.isLoading && !hasRegistered && !hasCurrentLocation && (
+          <p className="text-xs text-amber-500 dark:text-amber-400">
+            地域を設定してから通知地域を更新してください
+          </p>
+        )}
+
         <button
           type="button"
           onClick={() => void unsubscribe()}

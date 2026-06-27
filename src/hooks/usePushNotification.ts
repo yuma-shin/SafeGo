@@ -45,9 +45,6 @@ export function usePushNotification(
 
   const swRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const subscriptionRef = useRef<PushSubscription | null>(null);
-  // undefined = 初回レンダリング前、null/string = 初期値確定済み
-  const prevHomeCityCodeRef = useRef<string | null | undefined>(undefined);
-  const prevOfficeCityCodeRef = useRef<string | null | undefined>(undefined);
   const subscribeRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
@@ -94,37 +91,6 @@ export function usePushNotification(
       });
   }, []);
 
-  // 地域変更を検知して自動再登録
-  useEffect(() => {
-    const currHome = home?.cityCode ?? null;
-    const currOffice = office?.cityCode ?? null;
-
-    // 初回レンダリング時は基準値を記録するだけ
-    if (prevHomeCityCodeRef.current === undefined) {
-      prevHomeCityCodeRef.current = currHome;
-      prevOfficeCityCodeRef.current = currOffice;
-      return;
-    }
-
-    // 前回から変化がなければスキップ
-    if (prevHomeCityCodeRef.current === currHome && prevOfficeCityCodeRef.current === currOffice) {
-      return;
-    }
-
-    prevHomeCityCodeRef.current = currHome;
-    prevOfficeCityCodeRef.current = currOffice;
-
-    if (state.permission !== "subscribed" || state.isLoading) return;
-
-    const homeChanged = currHome !== (state.registeredHome?.cityCode ?? null);
-    const officeChanged = currOffice !== (state.registeredOffice?.cityCode ?? null);
-
-    if (homeChanged || officeChanged) {
-      void subscribeRef.current();
-    }
-    // state.registeredHome/Office の変化は追わない（登録直後のループを防ぐため）
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [home?.cityCode, office?.cityCode]);
 
   async function subscribe(): Promise<void> {
     if (!home && !office) {

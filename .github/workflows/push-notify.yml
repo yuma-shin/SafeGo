@@ -14,10 +14,13 @@ jobs:
     steps:
       - name: Trigger notify endpoint
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
             -X POST "${{ secrets.VERCEL_APP_URL }}/api/cron/notify" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+          BODY=$(echo "$RESPONSE" | head -1)
+          STATUS=$(echo "$RESPONSE" | tail -1 | sed 's/HTTP_STATUS://')
           echo "HTTP Status: $STATUS"
+          echo "Response: $BODY"
           if [ "$STATUS" != "200" ]; then
             echo "Unexpected status: $STATUS"
             exit 1

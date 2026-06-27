@@ -18,8 +18,13 @@ import type { JMAWarningData } from "@/types/jma";
 export const runtime = "nodejs";
 
 function getAppUrl(req: NextRequest): string {
-  const host = req.headers.get("host") ?? "";
-  const proto = host.startsWith("localhost") ? "http" : "https";
+  // 環境変数が設定されていれば最優先（カスタムドメイン・本番 URL を明示指定）
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  }
+  // Vercel が設定する x-forwarded-host / x-forwarded-proto を利用
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "";
+  const proto = req.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   return `${proto}://${host}`;
 }
 

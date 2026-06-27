@@ -13,7 +13,7 @@
 | 出社判定            | 特別警報・警報 → 「自宅待機」、注意報 → 「テレワーク推奨」、なし → 「出社可能」 |
 | 現在気温・天気      | AMeDAS観測値による現在気温と天気予報（概況・最高最低気温）を表示                |
 | 都道府県シルエット  | カード背景に都道府県の地形シルエットをアスペクト比正確に表示                    |
-| プッシュ通知        | 気象状況が変化したとき（10分ごと）にブラウザ通知を送信（PWA対応）               |
+| プッシュ通知        | 気象状況が変化したとき（10分ごと）にブラウザ通知を送信（PWA対応、cron-job.org で定期実行） |
 | キャッシュ制御      | APIへの過剰リクエストを防ぐ2層キャッシュ（最大10分に1回）                       |
 | 設定の永続化        | localStorage により地域設定・テーマをリロード後も保持                           |
 | ライト/ダークモード | OSの設定に連動し、手動切り替えも可能                                            |
@@ -80,7 +80,6 @@ cp .env.local.example .env.local
 | `VAPID_SUBJECT`                | Push サービス連絡先（`mailto:you@example.com` 形式）     |
 | `REDIS_URL`                    | Redis 接続 URL（Vercel KV ダッシュボードからコピー）     |
 | `CRON_SECRET`                  | Cron 認証トークン（任意の強力なランダム文字列）          |
-| `VERCEL_APP_URL`               | デプロイ先 URL（GitHub Actions から通知 API を呼ぶため） |
 
 **VAPID 鍵の生成:**
 
@@ -157,9 +156,6 @@ public/
     ├── icon-192.svg
     └── icon-512.svg
 
-.github/
-└── workflows/
-    └── push-notify.yml          # 10分ごとに通知 Cron を呼び出す GitHub Actions
 ```
 
 ---
@@ -324,9 +320,11 @@ iOS Safari でプッシュ通知を受け取るには、ホーム画面に追加
    - `VAPID_SUBJECT`
    - `REDIS_URL`（Vercel KV ダッシュボードからコピー）
    - `CRON_SECRET`
-5. GitHub リポジトリの Secrets に以下を追加:
-   - `CRON_SECRET`（Vercel と同じ値）
-   - `VERCEL_APP_URL`（例: `https://safego.vercel.app`）
+5. [cron-job.org](https://cron-job.org) で Cron ジョブを作成:
+   - URL: `https://your-app.vercel.app/api/cron/notify`
+   - Method: POST
+   - Header: `Authorization: Bearer {CRON_SECRET}`
+   - Schedule: Every 10 minutes
 
 > **プッシュ通知なしで使う場合**: 環境変数を設定しなければ、プッシュ通知ボタンは非表示になります。通知以外の全機能は環境変数なしで動作します。
 

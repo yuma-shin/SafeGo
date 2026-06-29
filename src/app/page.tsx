@@ -96,6 +96,25 @@ function warningToState(area: AreaEntry, data: WarningResponse): LocationWarning
   };
 }
 
+function BookOpenIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </svg>
+  );
+}
+
 export default function Home() {
   const { theme, toggle } = useTheme();
   const [state, setState] = useState<AppState>({
@@ -236,8 +255,22 @@ export default function Home() {
         }}
       />
 
-      {/* Theme toggle button */}
-      <div className="fixed top-4 right-4 z-50">
+      {/* Theme toggle & manual link */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        {process.env.NEXT_PUBLIC_MANUAL_URL && (
+          <a
+            href={process.env.NEXT_PUBLIC_MANUAL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="マニュアルを開く"
+            className="p-2 rounded-full transition-colors
+              bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20
+              text-slate-500 hover:text-slate-700 dark:text-white/60 dark:hover:text-white
+              border border-slate-200 dark:border-white/[0.12]"
+          >
+            <BookOpenIcon />
+          </a>
+        )}
         <ThemeToggle theme={theme} toggle={toggle} />
       </div>
 

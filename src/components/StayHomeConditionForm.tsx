@@ -11,6 +11,7 @@ import {
   Radio,
 } from "@headlessui/react";
 import type { StayHomeCondition, AlertLevelThreshold } from "@/types/push";
+import { ALERT_PROFILES, findMatchingProfile } from "@/lib/alertProfiles";
 
 type LevelChoice = AlertLevelThreshold | "";
 
@@ -342,6 +343,7 @@ function buildCondition(level: LevelChoice, codes: string[]): StayHomeCondition 
 export default function StayHomeConditionForm({ value, onChange }: Props) {
   const level: LevelChoice = value?.levelThreshold ?? "";
   const selectedCodes = value?.warningCodes ?? [];
+  const matchedProfileId = findMatchingProfile(selectedCodes)?.id ?? "";
 
   function handleLevelChange(newLevel: LevelChoice) {
     onChange(buildCondition(newLevel, selectedCodes));
@@ -349,6 +351,12 @@ export default function StayHomeConditionForm({ value, onChange }: Props) {
 
   function handleCodesChange(newCodes: string[]) {
     onChange(buildCondition(level, newCodes));
+  }
+
+  function handleProfileChange(profileId: string) {
+    const profile = ALERT_PROFILES.find((p) => p.id === profileId);
+    if (!profile) return;
+    handleCodesChange([...profile.codes]);
   }
 
   return (
@@ -374,6 +382,35 @@ export default function StayHomeConditionForm({ value, onChange }: Props) {
               text-slate-600 dark:text-white/60
               group-data-[checked]:text-indigo-700 dark:group-data-[checked]:text-white">
               {opt.label}
+            </span>
+            <CheckCircleIcon className="size-5 flex-shrink-0
+              text-indigo-500 dark:text-indigo-400
+              opacity-0 group-data-[checked]:opacity-100 transition-opacity" />
+          </Radio>
+        ))}
+      </RadioGroup>
+
+      <p className="text-xs font-medium text-slate-500 dark:text-white/40 mb-2">プリセット（任意）</p>
+
+      <RadioGroup value={matchedProfileId} onChange={handleProfileChange} className="space-y-2 mb-5">
+        {ALERT_PROFILES.map((profile) => (
+          <Radio
+            key={profile.id}
+            value={profile.id}
+            aria-label={profile.label}
+            className="group relative flex cursor-pointer items-center justify-between
+              rounded-lg px-4 py-3
+              bg-slate-50 dark:bg-white/5
+              ring-1 ring-slate-200 dark:ring-white/10
+              data-[checked]:bg-indigo-50 dark:data-[checked]:bg-indigo-950
+              data-[checked]:ring-indigo-400 dark:data-[checked]:ring-indigo-500
+              focus:outline-none data-[focus]:ring-2 data-[focus]:ring-indigo-500
+              transition-colors"
+          >
+            <span className="text-sm
+              text-slate-600 dark:text-white/60
+              group-data-[checked]:text-indigo-700 dark:group-data-[checked]:text-white">
+              {profile.label}
             </span>
             <CheckCircleIcon className="size-5 flex-shrink-0
               text-indigo-500 dark:text-indigo-400

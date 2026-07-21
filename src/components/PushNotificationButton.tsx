@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { usePushNotification } from "@/hooks/usePushNotification";
 import StayHomeConditionForm from "@/components/StayHomeConditionForm";
+import { findMatchingProfile } from "@/lib/alertProfiles";
 import type { AreaEntry } from "@/types/jma";
 import type { StayHomeCondition } from "@/types/push";
 
@@ -52,7 +53,7 @@ function LocationLabel({ label, area }: { label: string; area: AreaEntry }) {
   );
 }
 
-function conditionSummary(condition: StayHomeCondition | null): string {
+export function conditionSummary(condition: StayHomeCondition | null): string {
   if (!condition) return "デフォルト（警報以上）";
   const parts: string[] = [];
   if (condition.levelThreshold) {
@@ -65,7 +66,8 @@ function conditionSummary(condition: StayHomeCondition | null): string {
     parts.push(`レベル: ${labels[condition.levelThreshold] ?? condition.levelThreshold}`);
   }
   if (condition.warningCodes && condition.warningCodes.length > 0) {
-    parts.push(`警報種別: ${condition.warningCodes.length}件`);
+    const matchedProfile = findMatchingProfile(condition.warningCodes);
+    parts.push(matchedProfile ? matchedProfile.label : `警報種別: ${condition.warningCodes.length}件`);
   }
   return parts.join(" / ");
 }

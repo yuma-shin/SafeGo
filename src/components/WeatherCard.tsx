@@ -112,7 +112,7 @@ export default function WeatherCard({
       </div>
 
       {/* Alert level accent stripe */}
-      <div className={`h-1 bg-gradient-to-r ${levelAccent[alertLevel]}`} />
+      <div className={`h-1 bg-linear-to-r ${levelAccent[alertLevel]}`} />
 
       {/* Header */}
       <div className="px-4 pt-3 pb-2">

@@ -59,7 +59,7 @@ export interface ErrorResponse {
 
 // 各警報種別（kinds 配列の要素）
 export interface JMAKindItem {
-  code: string;
+  code?: string;  // 「発表警報・注意報はなし」の場合はコードなし
   status: string;
   additions?: string[];  // 追加情報（例: ["竜巻"]）
 }

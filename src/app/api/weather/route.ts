@@ -46,10 +46,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const class20Items = warningData.warning?.class20Items ?? [];
   const targetArea = class20Items.find((a) => a.areaCode === cityCode);
 
-  const rawWarnings: JMAWarningItem[] = (targetArea?.kinds ?? []).map((k) => ({
-    code: k.code,
-    status: k.status,
-  }));
+  const rawWarnings: JMAWarningItem[] = (targetArea?.kinds ?? []).flatMap((k) =>
+    k.code ? [{ code: k.code, status: k.status }] : []
+  );
   const alerts: ActiveWarning[] = rawWarnings.map((w) => ({
     code: w.code,
     name: getWarningName(w.code),

@@ -269,7 +269,7 @@ function WarningCodeCombobox({ selected, onChange }: ComboboxProps) {
             py-2.5 pl-3 pr-3 text-sm
             text-slate-800 dark:text-white
             ring-1 ring-black/10 dark:ring-white/10
-            focus:outline-none focus:ring-2 focus:ring-indigo-500
+            focus:outline-hidden focus:ring-2 focus:ring-indigo-500
             transition-shadow"
           style={{ fontSize: "16px" }}
         >
@@ -314,7 +314,7 @@ function WarningCodeCombobox({ selected, onChange }: ComboboxProps) {
             text-slate-800 dark:text-white
             ring-1 ring-black/10 dark:ring-white/10
             placeholder:text-slate-400 dark:placeholder:text-white/30
-            focus:outline-none data-[focus]:ring-2 data-[focus]:ring-indigo-500
+            focus:outline-hidden data-[focus]:ring-2 data-[focus]:ring-indigo-500
             transition-shadow"
         />
         {isMounted ? createPortal(dropdown, document.body) : dropdown}
@@ -375,7 +375,7 @@ export default function StayHomeConditionForm({ value, onChange }: Props) {
               ring-1 ring-slate-200 dark:ring-white/10
               data-[checked]:bg-indigo-50 dark:data-[checked]:bg-indigo-950
               data-[checked]:ring-indigo-400 dark:data-[checked]:ring-indigo-500
-              focus:outline-none data-[focus]:ring-2 data-[focus]:ring-indigo-500
+              focus:outline-hidden data-[focus]:ring-2 data-[focus]:ring-indigo-500
               transition-colors"
           >
             <span className="text-sm
@@ -404,7 +404,7 @@ export default function StayHomeConditionForm({ value, onChange }: Props) {
               ring-1 ring-slate-200 dark:ring-white/10
               data-[checked]:bg-indigo-50 dark:data-[checked]:bg-indigo-950
               data-[checked]:ring-indigo-400 dark:data-[checked]:ring-indigo-500
-              focus:outline-none data-[focus]:ring-2 data-[focus]:ring-indigo-500
+              focus:outline-hidden data-[focus]:ring-2 data-[focus]:ring-indigo-500
               transition-colors"
           >
             <span className="text-sm

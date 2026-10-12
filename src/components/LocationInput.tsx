@@ -131,7 +131,7 @@ export default function LocationInput({
                 text-sm text-slate-800 dark:text-white
                 ring-1 ring-black/10 dark:ring-white/10
                 placeholder:text-slate-400 dark:placeholder:text-white/30
-                focus:outline-none data-[focus]:ring-2 data-[focus]:ring-indigo-500 dark:data-[focus]:ring-indigo-400
+                focus:outline-hidden data-[focus]:ring-2 data-[focus]:ring-indigo-500 dark:data-[focus]:ring-indigo-400
                 transition-shadow"
               style={{ fontSize: "16px" }}
             />

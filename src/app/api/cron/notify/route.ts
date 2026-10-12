@@ -55,15 +55,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   function getActiveWarningNames(data: JMAWarningData, cityCode: string): string[] {
     const area = data.warning?.class20Items?.find((a) => a.areaCode === cityCode);
     if (!area) return [];
-    return area.kinds
-      .filter((k) => isActiveWarning(k.status))
-      .map((k) => getWarningName(k.code));
+    return area.kinds.flatMap((k) =>
+      k.code && isActiveWarning(k.status) ? [getWarningName(k.code)] : []
+    );
   }
 
   function getWarningItems(data: JMAWarningData, cityCode: string) {
     const area = data.warning?.class20Items?.find((a) => a.areaCode === cityCode);
     if (!area) return [];
-    return area.kinds.map((k) => ({ code: k.code, status: k.status }));
+    return area.kinds.flatMap((k) =>
+      k.code ? [{ code: k.code, status: k.status }] : []
+    );
   }
 
   let processed = 0;

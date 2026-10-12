@@ -19,12 +19,6 @@
       allowedVersions: "<10",
     },
     {
-      // Tailwind 4 requires migrating the PostCSS configuration and styles.
-      matchManagers: ["npm"],
-      matchPackageNames: ["tailwindcss"],
-      allowedVersions: "<4",
-    },
-    {
       matchManagers: ["github-actions"],
       groupName: "github-actions",
       pinDigests: true,

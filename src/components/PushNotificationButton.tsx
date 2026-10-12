@@ -162,11 +162,16 @@ function ConditionModal({ open, value, onChange, onClose }: ModalProps) {
 // ─── PushNotificationButton ──────────────────────────────────────────────────
 
 export default function PushNotificationButton({ home, office }: Props) {
+  const [isIOS, setIsIOS] = useState(false);
   const [pendingCondition, setPendingCondition] = useState<StayHomeCondition | null>(null);
   const [showConditionModal, setShowConditionModal] = useState(false);
   const conditionInitialized = useRef(false);
 
   const { state, subscribe, unsubscribe } = usePushNotification(home, office, pendingCondition);
+
+  useEffect(() => {
+    setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent));
+  }, []);
 
   useEffect(() => {
     if (!conditionInitialized.current && state.permission === "subscribed") {
@@ -217,6 +222,12 @@ export default function PushNotificationButton({ home, office }: Props) {
             <BellIcon />
             <span>{state.isLoading ? "設定を更新中..." : "通知が有効です"}</span>
           </div>
+
+          {isIOS && !state.isLoading && (
+            <p className="text-xs text-slate-400 dark:text-white/25 text-center leading-relaxed">
+              iOSで即時通知を受け取るには、「設定」→「通知」→「SafeGo」の配信タイミングを「即時配信」に設定してください。
+            </p>
+          )}
 
           {!state.isLoading && hasRegistered && (
             <div className="flex flex-col items-center gap-0.5">

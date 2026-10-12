@@ -7,6 +7,24 @@
   groupName: "all dependencies",
   packageRules: [
     {
+      // ts-jest supports TypeScript >=4.3 <7; revisit when it supports 7.
+      matchManagers: ["npm"],
+      matchPackageNames: ["typescript"],
+      allowedVersions: "<7",
+    },
+    {
+      // eslint-config-next's eslint-plugin-import does not support ESLint 10.
+      matchManagers: ["npm"],
+      matchPackageNames: ["eslint"],
+      allowedVersions: "<10",
+    },
+    {
+      // Tailwind 4 requires migrating the PostCSS configuration and styles.
+      matchManagers: ["npm"],
+      matchPackageNames: ["tailwindcss"],
+      allowedVersions: "<4",
+    },
+    {
       matchManagers: ["github-actions"],
       groupName: "github-actions",
       pinDigests: true,

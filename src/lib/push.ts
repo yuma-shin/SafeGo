@@ -85,7 +85,8 @@ export async function sendNotification(
           auth: sub.auth,
         },
       },
-      JSON.stringify(payload)
+      JSON.stringify(payload),
+      { urgency: "high", TTL: 300 }
     );
     return { ok: true };
   } catch (err) {

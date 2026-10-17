@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import React, {
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
 } from "react";
@@ -45,6 +46,7 @@ export default function LocationInput({
   onSelect,
   placeholder = "地域名を入力（例: 大阪市）",
 }: LocationInputProps) {
+  const inputId = useId();
   const [candidates, setCandidates] = useState<AreaEntry[]>([]);
   const [searched, setSearched] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -105,8 +107,8 @@ export default function LocationInput({
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <label className="block text-sm font-medium text-slate-500 dark:text-white/50 mb-1.5">
-        {label}
+      <label htmlFor={inputId} className="location-label">
+        <span className="location-number" aria-hidden="true">{label === "自宅" ? "01" : "02"}</span>{label}
       </label>
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
@@ -123,34 +125,28 @@ export default function LocationInput({
             immediate
           >
             <ComboboxInput
+              id={inputId}
               displayValue={(area: AreaEntry | null) => area?.cityName ?? ""}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
-              className="w-full rounded-lg bg-white dark:bg-white/5 py-2.5 pl-3 pr-10
-                text-sm text-slate-800 dark:text-white
-                ring-1 ring-black/10 dark:ring-white/10
-                placeholder:text-slate-400 dark:placeholder:text-white/30
-                focus:outline-hidden data-[focus]:ring-2 data-[focus]:ring-indigo-500 dark:data-[focus]:ring-indigo-400
-                transition-shadow"
+              className="ui-input"
               style={{ fontSize: "16px" }}
             />
 
-            <ComboboxButton className="group absolute inset-y-0 right-0 px-3">
-              <ChevronDownIcon className="size-4 text-slate-400 dark:text-white/40 group-data-[hover]:text-slate-600 dark:group-data-[hover]:text-white transition-colors" />
+            <ComboboxButton aria-label={`${label}の地域候補を表示`} className="input-trigger group">
+              <ChevronDownIcon className="size-4 text-slate-400 dark:text-neutral-300 group-data-[hover]:text-slate-600 dark:group-data-[hover]:text-white transition-colors" />
             </ComboboxButton>
 
             {showDropdown && (
               <ComboboxOptions
                 static
-                className="absolute z-20 w-full mt-1 rounded-xl
-                  bg-white dark:bg-gray-900
-                  ring-1 ring-black/8 dark:ring-white/10
-                  p-1 shadow-xl anim-slide-down"
+                className="ui-dropdown absolute z-20 w-full mt-2 anim-slide-down"
                 style={{ maxHeight: "240px", overflowY: "auto" }}
               >
+                <div className="dropdown-heading" role="presentation">地域を選択<span>{candidates.length}件</span></div>
                 {candidates.length === 0 && searched ? (
-                  <div className="px-3 py-2 text-sm text-slate-400 dark:text-white/30">
+                  <div className="px-3 py-2 text-base text-slate-400 dark:text-neutral-300">
                     該当する地域が見つかりません
                   </div>
                 ) : (
@@ -160,14 +156,14 @@ export default function LocationInput({
                       value={area}
                       onPointerDown={() => { skipNextHUIChangeRef.current = true; }}
                       onClick={() => { skipNextHUIChangeRef.current = false; handleSelect(area); }}
-                      className="group flex cursor-default items-center gap-2 rounded-lg px-3 py-2
-                        select-none data-[focus]:bg-indigo-600 data-[focus]:text-white"
-                      style={{ minHeight: "40px" }}
+                      className="ui-option group select-none"
                     >
-                      <CheckIcon className="size-4 text-indigo-500 dark:text-indigo-400 invisible group-data-[selected]:visible flex-shrink-0" />
-                      <span>
+                      <span className="option-indicator" aria-hidden="true">
+                        <CheckIcon className="size-4 opacity-0 group-data-[selected]:opacity-100" />
+                      </span>
+                      <span className="option-content">
                         {area.cityName}
-                        <span className="ml-2 text-xs text-slate-400 dark:text-white/35 group-data-[focus]:text-white/70">
+                        <span className="option-meta">
                           {area.officeName}
                         </span>
                       </span>
@@ -184,9 +180,7 @@ export default function LocationInput({
             type="button"
             onClick={handleReset}
             aria-label="クリア"
-            className="flex-shrink-0 px-2 py-2 text-slate-400 dark:text-white/30
-              hover:text-slate-700 dark:hover:text-white/70 rounded-lg transition-colors
-              hover:bg-slate-100 dark:hover:bg-white/[0.06]"
+            className="icon-button clear-button flex-shrink-0"
           >
             ×
           </button>

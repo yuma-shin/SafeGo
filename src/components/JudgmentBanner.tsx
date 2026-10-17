@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import type { JudgmentResult } from "@/types/jma";
@@ -8,73 +8,36 @@ interface JudgmentBannerProps {
   isLoading: boolean;
 }
 
-const GLASS = "backdrop-blur-md border border-slate-200 dark:border-white/[0.12]";
-
-export default function JudgmentBanner({
-  result,
-  isLoading,
-}: JudgmentBannerProps) {
+export default function JudgmentBanner({ result, isLoading }: JudgmentBannerProps) {
   if (isLoading) {
     return (
-      <div
-        data-testid="judgment-loading"
-        className={`rounded-2xl p-6 animate-pulse ${GLASS} flex items-center justify-center`}
-        style={{ background: "var(--card-bg-muted)" }}
-      >
-        <div className="h-6 rounded w-48" style={{ background: "var(--skeleton-line)" }} />
-      </div>
-    );
-  }
-
-  if (!result) {
-    return (
-      <div
-        className={`rounded-2xl p-6 text-center ${GLASS}`}
-        style={{ background: "var(--banner-default-bg)" }}
-      >
-        <p className="text-slate-400 dark:text-white/40 text-base font-medium">
-          地域を設定してください
-        </p>
-      </div>
-    );
-  }
-
-  if (result === "stay-home") {
-    return (
-      <div
-        className={`rounded-2xl p-6 text-center ${GLASS}`}
-        style={{
-          background: "var(--banner-red-bg)",
-          borderColor: "var(--banner-red-border)",
-        }}
-      >
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <p className="text-xl font-bold text-red-600 dark:text-red-300">自宅待機</p>
+      <div data-testid="judgment-loading" className="soft-panel judgment animate-pulse" role="status" aria-label="出社可否を確認中">
+        <div className="judgment-symbol" />
+        <div className="space-y-3 flex-1">
+          <div className="h-4 rounded w-2/3" style={{ background: "var(--skeleton-line)" }} />
+          <div className="h-3 rounded w-full" style={{ background: "var(--skeleton-line)" }} />
         </div>
-        <p className="text-sm font-semibold text-red-600/80 dark:text-red-300/80 mb-1">
-          警報が発令されています
-        </p>
-        <p className="text-sm text-red-600/70 dark:text-red-400/70">
-          自治体の指示に従い、安全を確保してください。
-        </p>
       </div>
     );
   }
 
+  const isWarning = result === "stay-home";
   return (
-    <div
-      className={`rounded-2xl p-6 text-center ${GLASS}`}
-      style={{
-        background: "var(--banner-green-bg)",
-        borderColor: "var(--banner-green-border)",
-      }}
-    >
-      <div className="flex items-center justify-center gap-3 mb-2">
-        <p className="text-xl font-bold text-emerald-600 dark:text-emerald-300">通常出社可能</p>
+    <div className={`soft-panel judgment${isWarning ? " judgment-warning" : ""}`} role="status">
+      <span className="judgment-symbol" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          {isWarning ? <><path d="m12 3 10 17H2z" /><path d="M12 9v4m0 3v.01" /></> : result ? <><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></> : <><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>}
+        </svg>
+      </span>
+      <div className="min-w-0">
+        <p className="judgment-label">COMMUTE STATUS</p>
+        <p className={`judgment-title${isWarning ? " text-red-700 dark:text-red-300" : ""}`}>
+          {!result ? "地域を設定してください" : isWarning ? "自宅待機" : "通常出社可能"}
+        </p>
+        <p className="judgment-detail">
+          {!result ? "下の欄から、自宅と勤務地の地域を選んではじめましょう。" : isWarning ? <><span className="font-medium text-red-700 dark:text-red-300">警報が発令されています</span><br />自治体の指示に従い、安全を確保してください。</> : "現在、警報は発令されていません。（注意報のみの場合も出社可能です）"}
+        </p>
       </div>
-      <p className="text-sm text-emerald-600/70 dark:text-emerald-400/70">
-        現在、警報は発令されていません。（注意報のみの場合も出社可能です）
-      </p>
     </div>
   );
 }

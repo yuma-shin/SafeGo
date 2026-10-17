@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
@@ -13,7 +13,7 @@ interface Props {
   office: AreaEntry | null;
 }
 
-const GLASS = "backdrop-blur-md border border-slate-200 dark:border-white/[0.12]";
+const GLASS = "soft-panel notification-panel";
 
 function BellIcon() {
   return (
@@ -45,11 +45,15 @@ function GearIcon() {
   );
 }
 
-function LocationLabel({ label, area }: { label: string; area: AreaEntry }) {
+function NotificationLocation({ label, area }: { label: string; area: AreaEntry | null }) {
   return (
-    <span className="text-xs text-slate-500 dark:text-white/40">
-      {label}: {area.cityName}（{area.officeName}）
-    </span>
+    <div className="notification-detail">
+      <dt>{label}</dt>
+      <dd>
+        <span className={`notification-value${area ? "" : " notification-value-empty"}`}>{area?.cityName ?? "未設定"}</span>
+        {area && <span className="notification-meta">{area.officeName}</span>}
+      </dd>
+    </div>
   );
 }
 
@@ -72,29 +76,28 @@ export function conditionSummary(condition: StayHomeCondition | null): string {
   return parts.join(" / ");
 }
 
+function NotificationDetails({ home, office, condition }: Props & { condition: StayHomeCondition | null }) {
+  return (
+    <dl className="notification-details" aria-label="通知の設定内容">
+      <NotificationLocation label="自宅" area={home} />
+      <NotificationLocation label="勤務地" area={office} />
+      <div className="notification-detail notification-condition">
+        <dt>通知条件</dt>
+        <dd className="notification-condition-values">
+          {conditionSummary(condition).split(" / ").map((part) => <span className="notification-condition-value" key={part}>{part}</span>)}
+        </dd>
+      </div>
+    </dl>
+  );
+}
+
 // ─── SettingsButton ──────────────────────────────────────────────────────────
 
 function SettingsButton({ onClick }: { onClick: () => void }) {
   return (
-    <div className="absolute top-2.5 right-3 group">
-      <button
-        type="button"
-        aria-label="通知条件を設定する"
-        onClick={onClick}
-        className="p-1 rounded-md transition-colors
-          text-slate-300 dark:text-white/20
-          hover:text-slate-500 dark:hover:text-white/50
-          hover:bg-slate-100 dark:hover:bg-white/[0.06]"
-      >
-        <GearIcon />
-      </button>
-      <div className="absolute right-0 top-full mt-1.5 px-2 py-1 rounded-md text-xs whitespace-nowrap pointer-events-none z-10
-        bg-slate-700 dark:bg-slate-200
-        text-white dark:text-slate-800
-        opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-        通知条件を設定する
-      </div>
-    </div>
+    <button type="button" aria-label="通知条件を設定する" onClick={onClick} className="ui-button notification-settings">
+      <GearIcon /><span>条件を変更</span>
+    </button>
   );
 }
 
@@ -111,25 +114,24 @@ function ConditionModal({ open, value, onChange, onClose }: ModalProps) {
   return (
     <Dialog open={open} onClose={onClose} className="relative z-50">
       {/* Backdrop — rendered in portal, no stacking context conflicts */}
-      <div className="fixed inset-0 bg-black/50 anim-fade-in" aria-hidden="true" />
+      <div className="dialog-backdrop fixed inset-0 anim-fade-in" aria-hidden="true" />
 
       {/* Centering wrapper */}
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <DialogPanel
-          className="w-full max-w-sm rounded-2xl flex flex-col max-h-[85vh] anim-scale-in
-            border border-slate-200 dark:border-white/[0.12]"
+          className="soft-dialog w-full max-w-md flex flex-col max-h-[85dvh] anim-scale-in"
           style={{ background: "var(--modal-card-bg)" }}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-5 pt-5 pb-4 flex-shrink-0">
-            <DialogTitle className="text-sm font-semibold text-slate-700 dark:text-white/80">
+            <DialogTitle className="text-lg font-bold text-slate-700 dark:text-white">
               通知条件を設定する
             </DialogTitle>
             <button
               type="button"
               aria-label="閉じる"
               onClick={onClose}
-              className="text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60 text-lg leading-none"
+              className="icon-button text-lg leading-none"
             >
               ×
             </button>
@@ -145,10 +147,7 @@ function ConditionModal({ open, value, onChange, onClose }: ModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="w-full py-1.5 rounded-full text-sm font-medium transition-colors
-                bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20
-                text-slate-600 hover:text-slate-800 dark:text-white/60 dark:hover:text-white
-                border border-slate-200 dark:border-white/[0.12]"
+              className="ui-button ui-button-primary w-full"
             >
               完了
             </button>
@@ -186,13 +185,13 @@ export default function PushNotificationButton({ home, office }: Props) {
     return (
       <div
         className={`rounded-2xl px-4 py-3 mt-4 flex flex-col items-center gap-1.5 ${GLASS}`}
-        style={{ background: "var(--card-bg-muted)" }}
+        style={{ background: "var(--card-bg)" }}
       >
-        <div className="flex items-center gap-2 text-slate-400 dark:text-white/30">
+        <div className="flex items-center gap-2 text-slate-400 dark:text-neutral-300">
           <BellOffIcon />
-          <span className="text-sm font-medium">通知がブロックされています</span>
+          <span className="text-base font-medium">通知がブロックされています</span>
         </div>
-        <p className="text-xs text-slate-400 dark:text-white/25">
+        <p className="text-sm text-slate-400 dark:text-neutral-300">
           ブラウザの設定から通知を許可してください
         </p>
       </div>
@@ -213,58 +212,51 @@ export default function PushNotificationButton({ home, office }: Props) {
     return (
       <>
         <div
-          className={`relative rounded-2xl px-4 py-3 mt-4 flex flex-col items-center gap-2 ${GLASS}`}
-          style={{ background: "var(--card-bg-muted)" }}
+          className={GLASS}
+          style={{ background: "var(--card-bg)" }}
         >
-          <SettingsButton onClick={() => setShowConditionModal(true)} />
-
-          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
-            <BellIcon />
-            <span>{state.isLoading ? "設定を更新中..." : "通知が有効です"}</span>
+          <div className="notification-header">
+            <div className="notification-heading">
+              <span className="notification-symbol" aria-hidden="true"><BellIcon /></span>
+              <div>
+                <h2>通知設定</h2>
+                <p role="status">{state.isLoading ? "設定を更新中..." : "通知が有効です"}</p>
+              </div>
+            </div>
+            <SettingsButton onClick={() => setShowConditionModal(true)} />
           </div>
 
           {isIOS && !state.isLoading && (
-            <p className="text-xs text-slate-400 dark:text-white/25 text-center leading-relaxed">
+            <p className="text-sm text-slate-400 dark:text-neutral-300 text-center leading-relaxed">
               iOSで即時通知を受け取るには、「設定」→「通知」→「SafeGo」の配信タイミングを「即時配信」に設定してください。
             </p>
           )}
 
-          {!state.isLoading && hasRegistered && (
-            <div className="flex flex-col items-center gap-0.5">
-              {registeredHome && <LocationLabel label="自宅" area={registeredHome} />}
-              {registeredOffice && <LocationLabel label="勤務地" area={registeredOffice} />}
-            </div>
-          )}
+          <NotificationDetails home={registeredHome} office={registeredOffice} condition={registeredCondition} />
 
-          {!state.isLoading && (
-            <span className="text-xs text-slate-400 dark:text-white/25">
-              通知条件: {conditionSummary(registeredCondition)}
-            </span>
-          )}
-
-          {!state.isLoading && locationChanged && hasCurrentLocation && (
-            <p className="text-xs text-amber-500 dark:text-amber-400">
-              地域設定が変更されています
+          {!state.isLoading && needsUpdate && hasCurrentLocation && (
+            <p role="status" className="notification-notice text-sm text-amber-700 dark:text-amber-300">
+              {locationChanged
+                ? conditionChanged ? "地域設定と通知条件が変更されています" : "地域設定が変更されています"
+                : "通知条件が変更されています"}
+              <br />
+              「通知設定を更新する」を押して変更を反映してください。
             </p>
           )}
 
           {!state.isLoading && !hasRegistered && !hasCurrentLocation && (
-            <p className="text-xs text-amber-500 dark:text-amber-400">
+            <p className="notification-notice text-sm text-amber-700 dark:text-amber-300">
               地域を設定してから通知地域を更新してください
             </p>
           )}
 
-          <div className="flex flex-row gap-2 items-center justify-center">
+          <div className="notification-actions">
             {!state.isLoading && needsUpdate && hasCurrentLocation && (
               <button
                 type="button"
                 onClick={() => void subscribe()}
                 disabled={state.isLoading}
-                className="text-xs px-3 py-1 rounded-full transition-colors
-                  bg-sky-100 hover:bg-sky-200 dark:bg-sky-900/40 dark:hover:bg-sky-800/50
-                  text-sky-700 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100
-                  border border-sky-300 dark:border-sky-700
-                  disabled:opacity-40 disabled:cursor-not-allowed"
+                className="ui-button ui-button-primary"
               >
                 通知設定を更新する
               </button>
@@ -273,18 +265,14 @@ export default function PushNotificationButton({ home, office }: Props) {
               type="button"
               onClick={() => void unsubscribe()}
               disabled={state.isLoading}
-              className="text-xs px-3 py-1 rounded-full transition-colors
-                bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20
-                text-slate-500 hover:text-slate-700 dark:text-white/50 dark:hover:text-white/80
-                border border-slate-200 dark:border-white/[0.12]
-                disabled:opacity-40 disabled:cursor-not-allowed"
+              className="ui-button"
             >
               通知を解除する
             </button>
           </div>
 
           {state.errorMessage && (
-            <p className="text-xs text-red-500 dark:text-red-400">{state.errorMessage}</p>
+            <p className="text-sm text-red-500 dark:text-red-400">{state.errorMessage}</p>
           )}
         </div>
 
@@ -303,37 +291,46 @@ export default function PushNotificationButton({ home, office }: Props) {
   return (
     <>
       <div
-        className={`relative rounded-2xl px-4 py-3 mt-4 flex flex-col items-center gap-2 ${GLASS}`}
-        style={{ background: "var(--card-bg-muted)" }}
+        className={GLASS}
+        style={{ background: "var(--card-bg)" }}
       >
-        <SettingsButton onClick={() => setShowConditionModal(true)} />
+        <div className="notification-header">
+          <div className="notification-heading">
+            <span className="notification-symbol" aria-hidden="true"><BellOffIcon /></span>
+            <div>
+              <h2>通知設定</h2>
+              <p>出社可否の変化をお知らせ</p>
+            </div>
+          </div>
+          <SettingsButton onClick={() => setShowConditionModal(true)} />
+        </div>
 
-        <button
-          type="button"
-          onClick={() => void subscribe()}
-          disabled={state.isLoading || locationUnset}
-          className="flex items-center gap-2 text-sm font-medium px-4 py-1.5 rounded-full transition-colors
-            bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20
-            text-slate-600 hover:text-slate-800 dark:text-white/60 dark:hover:text-white
-            border border-slate-200 dark:border-white/[0.12]
-            disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <BellIcon />
-          {state.isLoading ? "処理中..." : "通知を有効にする"}
-        </button>
+        <NotificationDetails home={home} office={office} condition={pendingCondition} />
+
+        <div className="notification-actions">
+          <button
+            type="button"
+            onClick={() => void subscribe()}
+            disabled={state.isLoading || locationUnset}
+            className="ui-button ui-button-primary"
+          >
+            <BellIcon />
+            {state.isLoading ? "処理中..." : "通知を有効にする"}
+          </button>
+        </div>
 
         {locationUnset ? (
-          <p className="text-xs text-slate-400 dark:text-white/25">
+          <p className="notification-help text-sm text-slate-500 dark:text-neutral-300">
             自宅または勤務地を設定すると通知を有効にできます
           </p>
         ) : (
-          <p className="text-xs text-slate-400 dark:text-white/25">
+          <p className="notification-help text-sm text-slate-500 dark:text-neutral-300">
             出社可否が変わったときに通知が届きます
           </p>
         )}
 
         {state.errorMessage && (
-          <p className="text-xs text-red-500 dark:text-red-400">{state.errorMessage}</p>
+          <p className="text-sm text-red-500 dark:text-red-400">{state.errorMessage}</p>
         )}
       </div>
 

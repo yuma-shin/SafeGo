@@ -1,18 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="512" height="512" fill="none">
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="512" height="512" fill="none">
   <defs>
     <radialGradient id="glow" cx="50%" cy="35%" r="58%">
-      <stop offset="0%" stop-color="#0c4a6e" stop-opacity="0.5"/>
-      <stop offset="100%" stop-color="#0f172a" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#dfebf5" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="canopy" x1="96" y1="24" x2="96" y2="104" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#7dd3fc"/>
-      <stop offset="100%" stop-color="#0284c7"/>
+      <stop offset="0%" stop-color="#a8cce6"/>
+      <stop offset="100%" stop-color="#729fc4"/>
     </linearGradient>
   </defs>
 
-  <!-- Dark navy background -->
-  <rect width="192" height="192" rx="38" fill="#0f172a"/>
-  <!-- Atmospheric blue glow -->
+  <!-- Soft powder blue background -->
+  <rect width="192" height="192" rx="38" fill="#dfebf5"/>
+  <!-- Soft sky glow -->
   <rect width="192" height="192" rx="38" fill="url(#glow)"/>
 
   <!-- Umbrella canopy: half-circle + 3 scallops -->
@@ -24,16 +24,16 @@
 
   <!-- Handle: down then curves right, terminates at navigation indicator -->
   <path d="M 96 86 L 96 138 Q 96 158 116 158 L 124 158"
-        fill="none" stroke="#38bdf8" stroke-width="8" stroke-linecap="round"/>
+        fill="none" stroke="#527fa5" stroke-width="8" stroke-linecap="round"/>
 
   <!-- Navigation location accuracy ring -->
-  <circle cx="138" cy="148" r="22" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-opacity="0.4"/>
+  <circle cx="138" cy="148" r="22" fill="none" stroke="#527fa5" stroke-width="1.5" stroke-opacity="0.4"/>
 
   <!-- Paper airplane pointing upper-right (GPS/navigation style) -->
   <g transform="translate(138, 148) rotate(-45)">
     <!-- Body -->
-    <path d="M 16 0 L -16 -10 L -5 0 L -16 10 Z" fill="#38bdf8"/>
+    <path d="M 16 0 L -16 -10 L -5 0 L -16 10 Z" fill="#527fa5"/>
     <!-- Upper wing highlight showing paper fold -->
-    <path d="M 16 0 L -16 -10 L -5 0 Z" fill="#7dd3fc" fill-opacity="0.65"/>
+    <path d="M 16 0 L -16 -10 L -5 0 Z" fill="#a8cce6" fill-opacity="0.65"/>
   </g>
 </svg>

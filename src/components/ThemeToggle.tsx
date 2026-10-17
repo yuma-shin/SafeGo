@@ -14,10 +14,7 @@ export default function ThemeToggle({ theme, toggle }: ThemeToggleProps) {
       type="button"
       onClick={toggle}
       aria-label={theme === "dark" ? "ライトモードに切り替え" : "ダークモードに切り替え"}
-      className="p-2 rounded-full transition-colors
-        bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20
-        text-slate-500 hover:text-slate-700 dark:text-white/60 dark:hover:text-white
-        border border-slate-200 dark:border-white/[0.12]"
+      className="icon-button"
     >
       {theme === "dark" ? <SunIcon /> : <MoonIcon />}
     </button>

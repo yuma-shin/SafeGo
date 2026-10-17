@@ -1,9 +1,10 @@
-"use client";
+﻿"use client";
 
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import {
   Combobox,
+  ComboboxButton,
   ComboboxInput,
   ComboboxOption,
   ComboboxOptions,
@@ -114,33 +115,31 @@ function WarningCodeCombobox({ selected, onChange }: ComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [pos, setPos] = useState<DropdownPos>({ top: 0, left: 0, width: 0, maxHeight: 240 });
   const [isMounted, setIsMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const dropdownId = useId();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const skipHUIRef = useRef(false);
 
   useEffect(() => {
     setIsMounted(true);
-    const mq = window.matchMedia("(max-width: 639px)");
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
   }, []);
 
   const selectedSet = new Set(selected);
   const filtered = ALL_CODES.filter(
     ({ code, name }) => !selectedSet.has(code) && (query === "" || name.includes(query))
   );
-  const showDropdown = isOpen && (filtered.length > 0 || query !== "");
+  const showDropdown = isOpen;
 
   // Calculate dropdown position; flips above the input when space below is limited.
   const reposition = useCallback(() => {
     const input = wrapperRef.current?.querySelector("input");
     if (!input) return;
     const r = input.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - r.bottom - 8;
-    const spaceAbove = r.top - 8;
-    const maxH = 240;
+    const viewport = window.visualViewport;
+    const viewportTop = viewport?.offsetTop ?? 0;
+    const viewportBottom = viewportTop + (viewport?.height ?? window.innerHeight);
+    const spaceBelow = viewportBottom - r.bottom - 12;
+    const spaceAbove = r.top - viewportTop - 12;
+    const maxH = 320;
     if (spaceBelow >= 120 || spaceBelow >= spaceAbove) {
       setPos({ top: r.bottom + 4, left: r.left, width: r.width, maxHeight: Math.min(maxH, Math.max(80, spaceBelow)) });
     } else {
@@ -175,26 +174,40 @@ function WarningCodeCombobox({ selected, onChange }: ComboboxProps) {
     reposition();
   }, [isOpen, selected.length, reposition]);
 
+  // Keep the custom list aligned when the dialog scrolls or a mobile keyboard opens.
+  useEffect(() => {
+    if (!isOpen) return;
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", reposition);
+    viewport?.addEventListener("scroll", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+      viewport?.removeEventListener("resize", reposition);
+      viewport?.removeEventListener("scroll", reposition);
+    };
+  }, [isOpen, reposition]);
+
   // Close on outside click.
   useEffect(() => {
     function onDown(e: MouseEvent) {
       const t = e.target as Node;
       if (wrapperRef.current?.contains(t)) return;
-      if (document.getElementById("wc-dd")?.contains(t)) return;
+      if (document.getElementById(dropdownId)?.contains(t)) return;
       setIsOpen(false);
       setQuery("");
     }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
-  }, []);
+  }, [dropdownId]);
 
   const dropdown = showDropdown ? (
     <ComboboxOptions
       static
-      id="wc-dd"
-      className="rounded-xl bg-white dark:bg-gray-900
-        ring-1 ring-black/10 dark:ring-white/10
-        p-1 shadow-xl"
+      id={dropdownId}
+      className="ui-dropdown anim-slide-down"
       style={{
         position: "fixed",
         top: pos.top,
@@ -205,8 +218,9 @@ function WarningCodeCombobox({ selected, onChange }: ComboboxProps) {
         zIndex: 200,
       }}
     >
+      <div className="dropdown-heading" role="presentation">警報種別を選択<span>{filtered.length}件</span></div>
       {filtered.length === 0 ? (
-        <div className="px-3 py-2 text-sm text-slate-400 dark:text-white/30">
+        <div className="px-3 py-2 text-base text-slate-400 dark:text-neutral-300">
           該当する警報種別が見つかりません
         </div>
       ) : (
@@ -216,11 +230,12 @@ function WarningCodeCombobox({ selected, onChange }: ComboboxProps) {
             value={code}
             onPointerDown={() => { skipHUIRef.current = true; }}
             onClick={() => { skipHUIRef.current = false; add(code); }}
-            className="group flex cursor-default items-center rounded-lg px-3 py-2
-              select-none data-[focus]:bg-indigo-600 data-[focus]:text-white"
-            style={{ minHeight: "40px" }}
+            className="ui-option group select-none"
           >
-            <span className="text-sm text-slate-700 dark:text-white/80 group-data-[focus]:text-white">
+            <span className="option-indicator" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M10 5v10M5 10h10" /></svg>
+            </span>
+            <span className="text-base">
               {name}
             </span>
           </ComboboxOption>
@@ -236,17 +251,14 @@ function WarningCodeCombobox({ selected, onChange }: ComboboxProps) {
         return (
           <span
             key={code}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm
-              bg-indigo-50 dark:bg-indigo-500/20
-              text-indigo-600 dark:text-indigo-300
-              ring-1 ring-indigo-200 dark:ring-indigo-500/40"
+            className="ui-tag inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-base"
           >
             {name}
             <button
               type="button"
               aria-label={`${name}を削除`}
               onClick={() => remove(code)}
-              className="ml-0.5 text-indigo-400 hover:text-indigo-700 dark:hover:text-white transition-colors"
+              className="ml-0.5 text-slate-500 dark:text-neutral-300 hover:opacity-70"
             >
               ×
             </button>
@@ -256,69 +268,37 @@ function WarningCodeCombobox({ selected, onChange }: ComboboxProps) {
     </div>
   ) : null;
 
-  if (isMobile) {
-    return (
-      <div>
-        {tags}
-        <select
-          value=""
-          onChange={(e) => { if (e.target.value) add(e.target.value); }}
-          aria-label="警報種別を選択"
-          className="w-full rounded-lg
-            bg-white dark:bg-white/5
-            py-2.5 pl-3 pr-3 text-sm
-            text-slate-800 dark:text-white
-            ring-1 ring-black/10 dark:ring-white/10
-            focus:outline-hidden focus:ring-2 focus:ring-indigo-500
-            transition-shadow"
-          style={{ fontSize: "16px" }}
-        >
-          <option value="">警報種別を選択...</option>
-          {WARNING_CODE_GROUPS.map(({ label, codes }) => {
-            const available = codes.filter(({ code }) => !selectedSet.has(code));
-            if (available.length === 0) return null;
-            return (
-              <optgroup key={label} label={label}>
-                {available.map(({ code, name }) => (
-                  <option key={code} value={code}>{name}</option>
-                ))}
-              </optgroup>
-            );
-          })}
-        </select>
-      </div>
-    );
-  }
-
   return (
     <div ref={wrapperRef} className="w-full">
       {tags}
 
-      <Combobox
-        immediate
-        onChange={(code: string | null) => {
-          if (skipHUIRef.current) { skipHUIRef.current = false; return; }
-          if (code) add(code);
-        }}
-      >
-        <ComboboxInput
-          displayValue={() => ""}
-          onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
-          onFocus={open}
-          onKeyDown={(e) => { if (e.key === "Escape") close(); }}
-          placeholder="警報種別を検索..."
-          aria-label="警報種別を検索"
-          className="w-full rounded-lg
-            bg-white dark:bg-white/5
-            py-2.5 pl-3 pr-3 text-sm
-            text-slate-800 dark:text-white
-            ring-1 ring-black/10 dark:ring-white/10
-            placeholder:text-slate-400 dark:placeholder:text-white/30
-            focus:outline-hidden data-[focus]:ring-2 data-[focus]:ring-indigo-500
-            transition-shadow"
-        />
-        {isMounted ? createPortal(dropdown, document.body) : dropdown}
-      </Combobox>
+      <div className="relative">
+        <Combobox
+          immediate
+          onChange={(code: string | null) => {
+            if (skipHUIRef.current) { skipHUIRef.current = false; return; }
+            if (code) add(code);
+          }}
+        >
+          <ComboboxInput
+            displayValue={() => ""}
+            onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
+            onFocus={open}
+            onKeyDown={(e) => { if (e.key === "Escape") close(); }}
+            placeholder="警報種別を検索..."
+            aria-label="警報種別を検索"
+            className="ui-input"
+          />
+          <ComboboxButton
+            aria-label="警報種別の候補を表示"
+            onClick={() => { if (isOpen) close(); else open(); }}
+            className="input-trigger"
+          >
+            <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 8 4 4 4-4" /></svg>
+          </ComboboxButton>
+          {isMounted ? createPortal(dropdown, document.body) : dropdown}
+        </Combobox>
+      </div>
     </div>
   );
 }
@@ -361,7 +341,7 @@ export default function StayHomeConditionForm({ value, onChange }: Props) {
 
   return (
     <div className="w-full text-left">
-      <p className="text-xs font-medium text-slate-500 dark:text-white/40 mb-2">通知レベル</p>
+      <p className="text-base font-bold mb-3">通知レベル</p>
 
       <RadioGroup value={level} onChange={handleLevelChange} className="space-y-2 mb-5">
         {LEVEL_OPTIONS.map((opt) => (
@@ -369,28 +349,24 @@ export default function StayHomeConditionForm({ value, onChange }: Props) {
             key={String(opt.value)}
             value={opt.value}
             aria-label={opt.label}
-            className="group relative flex cursor-pointer items-center justify-between
-              rounded-lg px-4 py-3
-              bg-slate-50 dark:bg-white/5
-              ring-1 ring-slate-200 dark:ring-white/10
-              data-[checked]:bg-indigo-50 dark:data-[checked]:bg-indigo-950
-              data-[checked]:ring-indigo-400 dark:data-[checked]:ring-indigo-500
-              focus:outline-hidden data-[focus]:ring-2 data-[focus]:ring-indigo-500
-              transition-colors"
+            className="ui-choice group relative"
           >
-            <span className="text-sm
-              text-slate-600 dark:text-white/60
-              group-data-[checked]:text-indigo-700 dark:group-data-[checked]:text-white">
+            <span className="text-base">
               {opt.label}
             </span>
-            <CheckCircleIcon className="size-5 flex-shrink-0
-              text-indigo-500 dark:text-indigo-400
-              opacity-0 group-data-[checked]:opacity-100 transition-opacity" />
+            <CheckCircleIcon className="size-5 flex-shrink-0 opacity-0 group-data-[checked]:opacity-100 transition-opacity" />
           </Radio>
         ))}
       </RadioGroup>
 
-      <p className="text-xs font-medium text-slate-500 dark:text-white/40 mb-2">プリセット（任意）</p>
+      <div className="flex min-h-9 items-center justify-between gap-3 mb-3">
+        <p className="text-base font-bold">プリセット（任意）</p>
+        {matchedProfileId && (
+          <button type="button" aria-label="プロファイルを解除" className="ui-button profile-clear-button" onClick={() => handleCodesChange([])}>
+            解除
+          </button>
+        )}
+      </div>
 
       <RadioGroup value={matchedProfileId} onChange={handleProfileChange} className="space-y-2 mb-5">
         {ALERT_PROFILES.map((profile) => (
@@ -398,28 +374,17 @@ export default function StayHomeConditionForm({ value, onChange }: Props) {
             key={profile.id}
             value={profile.id}
             aria-label={profile.label}
-            className="group relative flex cursor-pointer items-center justify-between
-              rounded-lg px-4 py-3
-              bg-slate-50 dark:bg-white/5
-              ring-1 ring-slate-200 dark:ring-white/10
-              data-[checked]:bg-indigo-50 dark:data-[checked]:bg-indigo-950
-              data-[checked]:ring-indigo-400 dark:data-[checked]:ring-indigo-500
-              focus:outline-hidden data-[focus]:ring-2 data-[focus]:ring-indigo-500
-              transition-colors"
+            className="ui-choice group relative"
           >
-            <span className="text-sm
-              text-slate-600 dark:text-white/60
-              group-data-[checked]:text-indigo-700 dark:group-data-[checked]:text-white">
+            <span className="text-base">
               {profile.label}
             </span>
-            <CheckCircleIcon className="size-5 flex-shrink-0
-              text-indigo-500 dark:text-indigo-400
-              opacity-0 group-data-[checked]:opacity-100 transition-opacity" />
+            <CheckCircleIcon className="size-5 flex-shrink-0 opacity-0 group-data-[checked]:opacity-100 transition-opacity" />
           </Radio>
         ))}
       </RadioGroup>
 
-      <p className="text-xs font-medium text-slate-500 dark:text-white/40 mb-2">特定の警報種別（任意）</p>
+      <p className="text-base font-bold mb-3">特定の警報種別（任意）</p>
       <WarningCodeCombobox selected={selectedCodes} onChange={handleCodesChange} />
     </div>
   );

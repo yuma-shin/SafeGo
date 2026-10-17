@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 
-const GLASS = "backdrop-blur-md border border-slate-200 dark:border-white/[0.12]";
+const GLASS = "soft-panel";
 
 export default function InstallPrompt() {
   const [show, setShow] = useState(false);
@@ -18,11 +18,11 @@ export default function InstallPrompt() {
   return (
     <div
       className={`rounded-2xl px-4 py-3 mt-3 ${GLASS}`}
-      style={{ background: "var(--card-bg-muted)" }}
+      style={{ background: "var(--card-bg)" }}
     >
-      <p className="text-xs text-slate-500 dark:text-white/40 text-center leading-relaxed">
+      <p className="text-sm text-slate-500 dark:text-neutral-300 text-center leading-relaxed">
         iOSで通知を受け取るには、Safariの共有ボタン（
-        <span className="font-semibold text-slate-600 dark:text-white/60">□↑</span>
+        <span className="font-semibold text-slate-600 dark:text-neutral-300">□↑</span>
         ）から「ホーム画面に追加」を選択してください。
       </p>
     </div>

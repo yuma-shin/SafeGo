@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "自宅・勤務地の気象警報に基づく出社可否チェッカー",
     start_url: "/",
     display: "standalone",
-    background_color: "#0f172a",
-    theme_color: "#0c4a6e",
+    background_color: "#f6f6f4",
+    theme_color: "#393939",
     icons: [
       {
         src: "/icons/icon-192.svg",

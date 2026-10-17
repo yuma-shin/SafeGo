@@ -31,7 +31,8 @@ export default function PrefectureSilhouette({
           fill: "var(--silhouette-fill)",
           stroke: "var(--silhouette-stroke)",
         }}
-        strokeWidth="1.5"
+        strokeWidth="1.2"
+        vectorEffect="non-scaling-stroke"
         strokeLinejoin="round"
       />
     </svg>

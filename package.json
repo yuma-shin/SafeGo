@@ -15,9 +15,9 @@
     "@fontsource/zen-maru-gothic": "5.3.1",
     "@headlessui/react": "^2.2.10",
     "ioredis": "^6.0.0",
-    "next": "^16.4.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
+    "next": "^16.4.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
@@ -33,12 +33,12 @@
     "@types/web-push": "^3.6.4",
     "autoprefixer": "^10.6.1",
     "eslint": "^9.39.5",
-    "eslint-config-next": "16.4.0",
+    "eslint-config-next": "16.4.2",
     "jest": "^30.5.2",
     "jest-environment-jsdom": "^30.5.2",
     "postcss": "^8.5.30",
     "tailwindcss": "^4.3.3",
-    "ts-jest": "^29.4.14",
+    "ts-jest": "^29.4.15",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3"
